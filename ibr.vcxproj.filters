@@ -87,6 +87,9 @@
     <ClCompile Include="src\tavern_scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\demo_hdr.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -112,9 +115,6 @@
     </ClInclude>
     <ClInclude Include="src\types.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\demo_base.h">
-      <Filter>Header Files\demo</Filter>
     </ClInclude>
     <ClInclude Include="src\mesh.h">
       <Filter>Header Files</Filter>
@@ -163,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="src\tavern_scene.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_base.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_hdr.h">
+      <Filter>Header Files\demo</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -69,6 +69,8 @@ tavern_scene::tavern_scene(GL::cache& GLCache)
         glGenBuffers(1, &LightsUniformBuffer);
         glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
         glBufferData(GL_UNIFORM_BUFFER, LightCount * sizeof(GL::light), Lights.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     }
 }
 
@@ -84,7 +86,6 @@ static bool EditLight(GL::light* Light)
     bool Result =
           ImGui::Checkbox("Enabled", (bool*)&Light->Enabled)
         + ImGui::SliderFloat4("Position", Light->Position.e, -4.f, 4.f)
-        + ImGui::ColorEdit3("Ambient", Light->Ambient.e)
         + ImGui::ColorEdit3("Ambient", Light->Ambient.e)
         + ImGui::ColorEdit3("Diffuse", Light->Diffuse.e)
         + ImGui::ColorEdit3("Specular", Light->Specular.e)

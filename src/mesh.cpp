@@ -97,6 +97,33 @@ void* Mesh::BuildQuad(void* Vertices, void* End, const vertex_descriptor& Descri
     return ConvertVertices(Vertices, Descriptor, QuadVertices, 6);
 }
 
+void* Mesh::BuildScreenQuad(void* Vertices, void* End, const vertex_descriptor& Descriptor, const v2& screenSize)
+{
+    if (GetVertexCount(Vertices, End, Descriptor) < 6)
+    {
+        fprintf(stderr, "Not enough vertices to create quad\n");
+        return Vertices;
+    }
+
+    v3 Normal = { 0.f, 0.f, 1.f };
+
+    vertex_full TopLeft = { { -screenSize.x/2, screenSize.y/2, 0.f }, Normal, { 0.f, 1.f } };
+    vertex_full TopRight = { {  screenSize.x/2, screenSize.y/2, 0.f }, Normal, { 1.f, 1.f } };
+    vertex_full BottomLeft = { { -screenSize.x/2,-screenSize.y/2, 0.f }, Normal, { 0.f, 0.f } };
+    vertex_full BottomRight = { {  screenSize.x/2,-screenSize.y/2, 0.f }, Normal, { 1.f, 0.f } };
+
+    vertex_full QuadVertices[] = {
+        TopLeft,
+        BottomLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight,
+        TopRight
+    };
+
+    return ConvertVertices(Vertices, Descriptor, QuadVertices, 6);
+}
+
 void* Mesh::BuildCube(void* Vertices, void* End, const vertex_descriptor& Descriptor)
 {
     if (GetVertexCount(Vertices, End, Descriptor) < (6 * 6))
