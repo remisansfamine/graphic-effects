@@ -21,6 +21,7 @@
 #include "pg.h"
 
 #include "demo_minimal.h"
+#include "demo_fbo.h"
 #include "demo_base.h"
 #include "demo_pg_skybox.h"
 #include "demo_pg_billboard.h"
@@ -243,6 +244,7 @@ int main(int argc, char* argv[])
         int DemoId = 0; // Change this to start with another demo
         std::unique_ptr<demo> Demos[] = 
         {
+            std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_base>(GLCache, GLDebug),
             std::make_unique<demo_minimal>(),
             std::make_unique<demo_pg_skybox>(GLCache, GLDebug),

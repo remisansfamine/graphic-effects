@@ -87,6 +87,9 @@
     <ClCompile Include="src\tavern_scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\demo_fbo.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -163,6 +166,21 @@
     </ClInclude>
     <ClInclude Include="src\tavern_scene.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_fbo.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard2.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_postprocess.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_skybox.h">
+      <Filter>Header Files\demo</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
