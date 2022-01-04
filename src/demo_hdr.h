@@ -42,6 +42,9 @@ private:
     unsigned int rboDepth;
     unsigned int colorBuffer;
 
+    float explosure = 0.5f;
+    bool hdr;
+
     tavern_scene TavernScene;
 
     bool Wireframe = false;

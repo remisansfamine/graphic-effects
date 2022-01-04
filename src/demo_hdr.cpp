@@ -116,6 +116,9 @@ static const char* gFragmentShaderHDRStr = R"GLSL(
 // Varyings
 in vec2 vUV;
 
+uniform float explosure;
+uniform bool hdr;
+
 // Uniforms
 uniform sampler2D hdrBuffer;
 
@@ -124,14 +127,18 @@ out vec4 oColor;
 
 void main()
 {             
-    vec3 hdrColor = texture(hdrBuffer, vUV).rgb;
+    vec3 pureColor = texture(hdrBuffer, vUV).rgb;
+    vec3 hdrColor = pureColor;
     const float gamma = 2.2;
     
-    vec3 result = vec3(1.0) - exp(-hdrColor * 1.0);
+    vec3 result;
     
-// also gamma correct while we're at it       
-    result = pow(result, vec3(1.0 / gamma));
-
+    if (hdr)
+    {
+        hdrColor = vec3(1.0) - exp(-pureColor * explosure);     
+    }
+    
+    result = pow(hdrColor, vec3(1.0/gamma));
     oColor = vec4(result, 1.0);
 } 
 )GLSL";
@@ -318,6 +325,17 @@ void demo_hdr::DisplayDebugUI()
         }
         TavernScene.InspectLights();
 
+        ImGui::Checkbox("Hdr", &hdr);
+        if (hdr)
+        {
+            if (ImGui::TreeNodeEx("Hdr Settings"))
+            {
+                ImGui::SliderFloat("explosure", &explosure, 0, 1);
+                ImGui::TreePop();
+
+            }
+        }
+
         ImGui::TreePop();
     }
 }
@@ -360,6 +378,8 @@ void demo_hdr::RenderHdrTavern(const mat4& modelViewProj)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
 
+    glUniform1i(glGetUniformLocation(ProgramHDR, "hdr"), hdr);
+    glUniform1f(glGetUniformLocation(ProgramHDR, "explosure"), explosure);
 
     glBindVertexArray(quadVAO);
     DrawQuad(ProgramHDR, modelViewProj);
