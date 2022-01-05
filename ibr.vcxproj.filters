@@ -90,6 +90,9 @@
     <ClCompile Include="src\demo_hdr.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
+  <ClCompile Include="src\demo_fbo.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -168,6 +171,9 @@
       <Filter>Header Files\demo</Filter>
     </ClInclude>
     <ClInclude Include="src\demo_hdr.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_fbo.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
   </ItemGroup>
