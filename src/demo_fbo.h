@@ -34,6 +34,8 @@ public:
     virtual void Update(const platform_io& IO);
 
 private:
+    void DisplayDebugUI();
+
     GL::debug& GLDebug;
 
     // 3d camera
@@ -43,6 +45,16 @@ private:
     GLuint Program = 0;
     GLuint VAO = 0;
 
+    enum class color_transform : int
+    {
+        IDENTITY = 0,
+        GRAYSCALE = 1,
+        INVERSE = 2,
+        EDGEDETECTION = 3,
+        SEPIA = 4,
+    };
+
+    color_transform transformType = color_transform::INVERSE;
     postprocess_pass_data PostProcessPassData;
     framebuffer Framebuffer;
 

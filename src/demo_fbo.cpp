@@ -122,6 +122,8 @@ in vec2 vUV;
 
 // Uniforms
 uniform sampler2D uColorTexture;
+uniform int transformType;
+uniform float offset;
 
 // Shader outputs
 out vec4 oColor;
@@ -136,6 +138,21 @@ vec4 invert(in vec4 color)
     return vec4(invert(color.rgb), 1.0);
 }
 
+vec3 sepia(in vec3 color)
+{
+    vec3 result;
+    result.r = dot(color, vec3(0.393, 0.769, 0.189));
+    result.g = dot(color, vec3(0.349, 0.686, 0.168));
+    result.b = dot(color, vec3(0.272, 0.534, 0.131));
+
+    return result;
+}
+
+vec4 sepia(in vec4 color)
+{
+    return vec4(sepia(color.rgb), 1.0);
+}
+
 vec3 grayScale(in vec3 color, in vec3 colorSpectrum = vec3(1.0, 1.0, 1.0))
 {
     float average = dot(colorSpectrum, color) / 3.0;
@@ -146,8 +163,6 @@ vec4 grayScale(in vec4 color, in vec3 colorSpectrum = vec3(1.0, 1.0, 1.0))
 {
     return vec4(grayScale(color.rgb, colorSpectrum), 1.0);
 }
-
-const float offset = 1.0 / 300.0;  
 
 vec2 directions[9] = vec2[](
     vec2(-1.0, 1.0), // top-left
@@ -186,12 +201,28 @@ vec4 kernelEffect(in mat3 kernel)
 
 void main()
 {
-    vec4 pureColor = texture(uColorTexture, vUV);
+    switch (transformType)
+    {
+    case 0:
+        oColor = texture(uColorTexture, vUV);
+        break;
 
-    oColor = kernelEffect(edgeDetection);
+    case 1:
+        oColor = grayScale(texture(uColorTexture, vUV), vec3(0.2126 , 0.7152 , 0.0722));
+        break;
 
-    //oColor = grayScale(pureColor, vec3(0.2126 , 0.7152 , 0.0722));
-    //oColor = invert(pureColor);
+    case 2:
+        oColor = invert(texture(uColorTexture, vUV));
+        break;
+
+    case 3:
+        oColor = kernelEffect(edgeDetection);
+        break;
+
+    case 4:
+        oColor = sepia(texture(uColorTexture, vUV));
+        break;
+    }
 })GLSL";
 
 demo_fbo::demo_fbo(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug)
@@ -287,6 +318,31 @@ static void DrawQuad(GLuint Program, mat4 ModelViewProj)
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
+
+void demo_fbo::DisplayDebugUI()
+{
+    if (ImGui::TreeNodeEx("demo_fbo", ImGuiTreeNodeFlags_Framed))
+    {
+        const char* items[] = { "IDENTITY", "GRAYSCALE", "INVERT", "EDGEDETECTION", "SEPIA" };
+
+        if (ImGui::BeginCombo("Color transform", items[(int)transformType], ImGuiComboFlags_NoArrowButton))
+        {
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                bool is_selected = (int)transformType == n;
+                if (ImGui::Selectable(items[n], is_selected))
+                    transformType = color_transform(n);
+
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::TreePop();
+    }
+}
+
 void demo_fbo::Update(const platform_io& IO)
 {
     // First rendering pass
@@ -305,5 +361,10 @@ void demo_fbo::Update(const platform_io& IO)
     glDisable(GL_DEPTH_TEST);
     glBindTexture(GL_TEXTURE_2D, Framebuffer.ColorTexture);
 
+    glUniform1i(glGetUniformLocation(PostProcessPassData.Program, "transformType"), (GLint)transformType);
+    glUniform1f(glGetUniformLocation(PostProcessPassData.Program, "offset"), 1.f / 300.f);
+
     DrawQuad(PostProcessPassData.Program, Mat4::Identity());
+
+    DisplayDebugUI();
 }
