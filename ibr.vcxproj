@@ -162,6 +162,7 @@
     <ClCompile Include="src\demo_base.cpp" />
     <ClCompile Include="src\demo_hdr.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
+    <ClCompile Include="src\demo_fbo.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh.cpp" />
     <ClCompile Include="src\opengl_helpers.cpp" />
@@ -186,6 +187,11 @@
     <ClInclude Include="src\demo_base.h" />
     <ClInclude Include="src\demo_hdr.h" />
     <ClInclude Include="src\demo_minimal.h" />
+    <ClInclude Include="src\demo_fbo.h" />
+    <ClInclude Include="src\demo_pg_billboard.h" />
+    <ClInclude Include="src\demo_pg_billboard2.h" />
+    <ClInclude Include="src\demo_pg_postprocess.h" />
+    <ClInclude Include="src\demo_pg_skybox.h" />
     <ClInclude Include="src\maths.h" />
     <ClInclude Include="src\maths_extension.h" />
     <ClInclude Include="src\mesh.h" />
