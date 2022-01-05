@@ -163,6 +163,7 @@
     <ClCompile Include="src\demo_hdr.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
+    <ClCompile Include="src\demo_pbr.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="src\demo_hdr.h" />
     <ClInclude Include="src\demo_minimal.h" />
     <ClInclude Include="src\demo_fbo.h" />
+    <ClInclude Include="src\demo_pbr.h" />
     <ClInclude Include="src\demo_pg_billboard.h" />
     <ClInclude Include="src\demo_pg_billboard2.h" />
     <ClInclude Include="src\demo_pg_postprocess.h" />
@@ -202,8 +204,12 @@
     <ClInclude Include="src\opengl_helpers_cache.h" />
     <ClInclude Include="src\opengl_helpers_wireframe.h" />
     <ClInclude Include="src\platform.h" />
+    <ClInclude Include="src\ShaderPBR.h" />
     <ClInclude Include="src\tavern_scene.h" />
     <ClInclude Include="src\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\vertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
