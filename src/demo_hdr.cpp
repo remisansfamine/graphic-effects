@@ -48,6 +48,9 @@ void main()
 })GLSL";
 
 static const char* gFragmentShaderStr = R"GLSL(
+
+layout (location = 1) out vec4 BrightColor;
+
 // Varyings
 in vec2 vUV;
 in vec3 vPos;
@@ -92,8 +95,16 @@ void main()
     vec3 specularColor = gDefaultMaterial.specular * lightResult.specular;
     vec3 emissiveColor = gDefaultMaterial.emission + texture(uEmissiveTexture, vUV).rgb;
     
+    vec3 result = (ambientColor + diffuseColor + specularColor + emissiveColor);
+
+    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+        BrightColor = vec4(result, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+
     // Apply light color
-    oColor = vec4((ambientColor + diffuseColor + specularColor + emissiveColor), 1.0);
+    oColor = vec4(result, 1.0);
 })GLSL";
 
 static const char* gVertexShaderHDRStr = R"GLSL(
@@ -117,10 +128,13 @@ static const char* gFragmentShaderHDRStr = R"GLSL(
 in vec2 vUV;
 
 uniform float explosure;
+
 uniform bool hdr;
+uniform bool bloom;
 
 // Uniforms
 uniform sampler2D hdrBuffer;
+uniform sampler2D bloomBlur;
 
 // Shader outputs
 out vec4 oColor;
@@ -128,8 +142,15 @@ out vec4 oColor;
 void main()
 {             
     vec3 pureColor = texture(hdrBuffer, vUV).rgb;
+    vec3 bloomColor = texture(bloomBlur, vUV).rgb;
+
+    if(bloom)
+       pureColor += bloomColor; // additive blending
+
     vec3 hdrColor = pureColor;
     const float gamma = 2.2;
+
+
     
     vec3 result;
     
@@ -140,6 +161,55 @@ void main()
     
     result = pow(hdrColor, vec3(1.0/gamma));
     oColor = vec4(result, 1.0);
+} 
+)GLSL";
+
+static const char* gVertexShaderBloomStr = R"GLSL(
+// Attributes
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec2 aUV;
+layout(location = 2) in vec3 aNormal;
+
+// Varyings
+out vec2 vUV;
+
+void main()
+{
+    vUV = aUV;
+    gl_Position = vec4(aPosition, 1.0);
+
+})GLSL";
+
+static const char* gFragmentShaderBloomStr = R"GLSL(
+// Varyings
+in vec2 vUV;
+
+// Uniforms
+uniform sampler2D brightImage;
+
+uniform bool horizontal;
+uniform float weight[5] = float[] (0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162);
+
+// Shader outputs
+out vec4 oColor;
+
+void main()
+{             
+    vec2 tex_offset = 1.0 / textureSize(brightImage, 0); // gets size of single texel
+    vec3 result = texture(brightImage, vUV).rgb * weight[0];
+
+    float xoffset = float(horizontal) * tex_offset.x;
+    float yoffset = float(!horizontal) * tex_offset.y;
+
+    for(int i = 1; i < 5; ++i)
+    {
+        vec2 uvoffset = i * vec2(xoffset, yoffset);
+
+        result += texture(brightImage, vUV + uvoffset).rgb * weight[i];
+        result += texture(brightImage, vUV - uvoffset).rgb * weight[i];
+    }
+
+     oColor = vec4(result, 1.0);
 } 
 )GLSL";
 
@@ -197,16 +267,28 @@ demo_hdr::demo_hdr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
         this->ProgramHDR = GL::CreateProgramEx(1, &gVertexShaderHDRStr, 1, &gFragmentShaderHDRStr, true);
     }
 
+    // Create shader
+    {
+        this->ProgramBloom = GL::CreateProgramEx(1, &gVertexShaderBloomStr, 1, &gFragmentShaderBloomStr, true);
+    }
     // set up floating point framebuffer to render scene to
     {
         glGenFramebuffers(1, &hdrFBO);
 
         // create floating point color buffer
-        glGenTextures(1, &colorBuffer);
-        glBindTexture(GL_TEXTURE_2D, colorBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, IO.WindowWidth, IO.WindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glGenTextures(2, colorBuffers);
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, IO.WindowWidth, IO.WindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
 
         // create depth buffer (renderbuffer)
         glGenRenderbuffers(1, &rboDepth);
@@ -215,12 +297,43 @@ demo_hdr::demo_hdr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
 
         // attach buffers
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffers[0], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, colorBuffers[1], 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+        unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, attachments);
+        
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "Framebuffer not complete!" << std::endl;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-       // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+
+        glGenFramebuffers(2, pingpongFBO);
+        glGenTextures(2, pingpongColorbuffers);
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+            glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, IO.WindowWidth, IO.WindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+            // also check if framebuffers are complete (no need for depth buffer)
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+                std::cout << "Framebuffer not complete!" << std::endl;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glUseProgram(ProgramHDR);
+        glUniform1i(glGetUniformLocation(ProgramHDR, "hdrBuffer"), 0);
+        glUniform1i(glGetUniformLocation(ProgramHDR, "bloomBlur"), 1);
+
     }
 
     // Gen mesh
@@ -289,19 +402,41 @@ void demo_hdr::Update(const platform_io& IO)
     mat4 ProjectionMatrix = Mat4::Perspective(Math::ToRadians(60.f), AspectRatio, 0.1f, 100.f);
     mat4 ViewMatrix = CameraGetInverseMatrix(Camera);
     mat4 ModelMatrix = Mat4::Translate({ 0.f, 0.f, 0.f });
+
     // Render tavern
     this->RenderTavern(ProjectionMatrix, ViewMatrix, ModelMatrix);
 
-    /*if (Wireframe)
-    {
-        GLDebug.Wireframe.BindBuffer(TavernScene.MeshBuffer, TavernScene.MeshDesc.Stride, TavernScene.MeshDesc.PositionOffset, TavernScene.MeshVertexCount);
-        GLDebug.Wireframe.DrawArray(0, TavernScene.MeshVertexCount, ProjectionMatrix * ViewMatrix * ModelMatrix);
-    }*/
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //Bloom
+    bool horizontal = true;
+    glUseProgram(ProgramBloom);
+    for (unsigned int i = 0; i < bloomIteration; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+        glUniform1i(glGetUniformLocation(ProgramBloom, "horizontal"), horizontal);
+        glBindTexture(GL_TEXTURE_2D, i == 0 ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);
+        RenderHdrTavern(ProjectionMatrix * ViewMatrix * ModelMatrix);
+        horizontal = !horizontal;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+   
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(ProgramHDR);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+
+    glUniform1i(glGetUniformLocation(ProgramHDR, "hdr"), hdr);
+    glUniform1i(glGetUniformLocation(ProgramHDR, "bloom"), bloomIteration > 0);
+    glUniform1f(glGetUniformLocation(ProgramHDR, "explosure"), explosure);
+   //HDR
    this->RenderHdrTavern(ProjectionMatrix * ViewMatrix * ModelMatrix);
 
     // Render tavern wireframe
@@ -325,15 +460,21 @@ void demo_hdr::DisplayDebugUI()
         }
         TavernScene.InspectLights();
 
-        ImGui::Checkbox("Hdr", &hdr);
-        if (hdr)
+        if (ImGui::TreeNodeEx("Post Process"))
         {
-            if (ImGui::TreeNodeEx("Hdr Settings"))
+            ImGui::DragInt("Bloom Iteration", &bloomIteration, 1.0f, 0, 50);
+            ImGui::Checkbox("Hdr", &hdr);
+            if (hdr)
             {
-                ImGui::SliderFloat("explosure", &explosure, 0, 1);
-                ImGui::TreePop();
+                if (ImGui::TreeNodeEx("Hdr Settings"))
+                {
+                    ImGui::SliderFloat("explosure", &explosure, 0, 1);
+                    ImGui::TreePop();
 
+                }
             }
+
+            ImGui::TreePop();
         }
 
         ImGui::TreePop();
@@ -372,14 +513,6 @@ void demo_hdr::RenderTavern(const mat4& ProjectionMatrix, const mat4& ViewMatrix
 void demo_hdr::RenderHdrTavern(const mat4& modelViewProj)
 {
     glEnable(GL_DEPTH_TEST);
-
-    // Use shader and configure its uniforms
-    glUseProgram(ProgramHDR);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, colorBuffer);
-
-    glUniform1i(glGetUniformLocation(ProgramHDR, "hdr"), hdr);
-    glUniform1f(glGetUniformLocation(ProgramHDR, "explosure"), explosure);
 
     glBindVertexArray(quadVAO);
     DrawQuad(ProgramHDR, modelViewProj);

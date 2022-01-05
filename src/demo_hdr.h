@@ -33,6 +33,7 @@ private:
     GLuint VAO = 0;
     
     GLuint ProgramHDR = 0;
+    GLuint ProgramBloom = 0;
 
     GLuint quadVAO = 0;
     GLuint vertexBuffer = 0;
@@ -40,10 +41,15 @@ private:
 
     unsigned int hdrFBO;
     unsigned int rboDepth;
-    unsigned int colorBuffer;
+    unsigned int colorBuffers[2];
+
+    unsigned int pingpongFBO[2];
+    unsigned int pingpongColorbuffers[2];
 
     float explosure = 0.5f;
     bool hdr;
+
+    int bloomIteration;
 
     tavern_scene TavernScene;
 
