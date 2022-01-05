@@ -18,6 +18,7 @@ class demo_skybox : public demo
         GLuint ID;
         GLuint VAO;
         GLuint VBO;
+        GLuint Program;
         GLuint VertexCount;
     };
 
@@ -25,6 +26,8 @@ public:
     demo_skybox(GL::cache& GLCache, GL::debug& GLDebug);
     virtual ~demo_skybox();
     virtual void Update(const platform_io& IO);
+
+    void DisplayDebugUI();
 
 private:
     GL::debug& GLDebug;
@@ -38,10 +41,14 @@ private:
 
     // GL objects needed by this demo
     GLuint Program = 0;
-    GLuint VAO = 0;
+    GLuint VAO;
 
     // Buffer storing all the vertices
     GLuint VertexBuffer = 0;
+    int VertexCount = 0;
+
+    int reflect = 1;
+    float refractRatio = 1.00f / 1.52f;
 
     // Skybox (positions in the VertexBuffer)
     int SkyboxStart = 0;

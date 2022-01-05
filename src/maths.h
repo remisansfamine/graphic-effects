@@ -180,6 +180,16 @@ namespace Mat3
 
 namespace Mat4
 {
+    inline mat4 Mat4(const mat3& Matrix3)
+    {
+        return {
+            Matrix3.c[0].e[0], Matrix3.c[0].e[1], Matrix3.c[0].e[2], 0.f,
+            Matrix3.c[1].e[0], Matrix3.c[1].e[1], Matrix3.c[1].e[2], 0.f,
+            Matrix3.c[2].e[0], Matrix3.c[2].e[1], Matrix3.c[2].e[2], 0.f,
+                    0.f ,              0.f,             0.f,         1.f
+        };
+    }
+
     inline mat4 Identity()
     {
         return
