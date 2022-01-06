@@ -90,10 +90,13 @@
     <ClCompile Include="src\demo_hdr.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
-  <ClCompile Include="src\demo_fbo.cpp">
+    <ClCompile Include="src\demo_fbo.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
     <ClCompile Include="src\demo_skybox.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_normal_map.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
   </ItemGroup>
@@ -180,6 +183,21 @@
       <Filter>Header Files\demo</Filter>
     </ClInclude>
     <ClInclude Include="src\demo_skybox.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_postprocess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_normal_map.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
   </ItemGroup>

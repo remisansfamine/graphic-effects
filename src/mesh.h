@@ -13,6 +13,9 @@ struct vertex_descriptor
 	int NormalOffset;
 	bool HasUV;
 	int UVOffset;
+
+	int TangentOffset;
+	int BitangentOffset;
 };
 
 struct vertex_full
@@ -20,11 +23,15 @@ struct vertex_full
 	v3 Position;
 	v3 Normal;
 	v2 UV;
+
+	v3 Tangent;
+	v3 Bitangent;
 };
 
 namespace Mesh
 {
-
+void  AddNormalMapParameters(std::vector<vertex_full>& Mesh);
+void  AddNormalMapParameters(vertex_full* Mesh, int VertexCount);
 void* Transform(void* Vertices, void* End, const vertex_descriptor& Descriptor, const mat4& Transform);
 void* BuildQuad(void* Vertices, void* End, const vertex_descriptor& Descriptor);
 void* BuildScreenQuad(void* Vertices, void* End, const vertex_descriptor& Descriptor, const v2& screenSize);
