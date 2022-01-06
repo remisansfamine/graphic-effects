@@ -211,5 +211,16 @@
     <None Include="src\vertexShader.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\ShaderPBR.vert">
+      <Filter>Header Files\shaders</Filter>
+    </None>
+    <None Include="src\ShaderPBR.frag">
+      <Filter>Header Files\shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Header Files\shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
