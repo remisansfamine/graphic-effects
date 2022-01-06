@@ -22,76 +22,6 @@ struct vertex
     v2 UV;
 };
 
-// Shaders
-// ==================================================
-static const char* gPPVertShaderStr = R"GLSL(
-layout (location = 0) in vec3 vertPos;
-
-out vec3 TexCoords;
-
-uniform mat4 uViewProj;
-
-void main()
-{
-    TexCoords = vertPos;
-    gl_Position = uViewProj * vec4(vertPos, 1.0);
-})GLSL";
-
-static const char* gPPFragShaderStr = R"GLSL(
-out vec4 FragColor;
-in  vec3 TexCoords;
-
-uniform samplerCube skyTexture;
-
-void main()
-{    
-    FragColor = texture(skyTexture, TexCoords);
-})GLSL";
-
-// Shaders
-// ==================================================
-static const char* gPPVertShaderBoxStr = R"GLSL(
-layout (location = 0) in vec3 vertPos;
-layout (location = 1) in vec3 vertNormal;
-
-out vec3 Normal;
-out vec3 Position;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
- 
-void main()
-{
-    Normal = mat3(transpose(inverse(model))) * vertNormal;
-    Position = vec3(model * vec4(vertPos, 1.0));
-    gl_Position = projection * view * vec4(Position, 1.0);
-})GLSL";
-
-static const char* gPPFragShaderBoxStr = R"GLSL(
-out vec4 FragColor;
-
-in vec3 Normal;
-in vec3 Position;
-
-uniform int onReflect;
-uniform float refractRatio;
-uniform vec3 cameraPos;
-uniform samplerCube skybox;
-
-void main()
-{             
-    vec3 I = normalize(Position - cameraPos);
-
-    vec3 R;
-    if (onReflect > 0)
-        R = reflect(I, normalize(Normal));
-    else
-        R = refract(I, normalize(Normal), refractRatio);
-
-    FragColor = vec4(texture(skybox, R).rgb, 1.0);
-})GLSL";
-
 static const std::string skyboxFaces[6] = {
     "media\\right.jpg",
     "media\\left.jpg",
@@ -145,7 +75,8 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
 
     // Gen cube and its program
     {
-        Skybox.Program = GL::CreateProgram(gPPVertShaderStr, gPPFragShaderStr);
+        //Skybox.Program = GL::CreateProgram(gPPVertShaderStr, gPPFragShaderStr);
+        Skybox.Program = GL::CreateProgramFromFiles("src/skybox_shader.vert", "src/skybox_shader.frag");
 
         vertex_descriptor Descriptor = {};
         Descriptor.Stride = sizeof(vertex);
@@ -176,7 +107,7 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
 
     // Gen cube and its program
     {
-        Program = GL::CreateProgram(gPPVertShaderBoxStr, gPPFragShaderBoxStr);
+        Program = GL::CreateProgramFromFiles("src/reflection_shader.vert", "src/reflection_shader.frag");
 
         vertex_descriptor Descriptor = {};
         Descriptor.Stride = sizeof(vertex_full);
@@ -185,20 +116,8 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
         Descriptor.NormalOffset = OFFSETOF(vertex_full, Normal);
         Descriptor.UVOffset = OFFSETOF(vertex_full, UV);
 
-        // Create cube vertices
-        /*const int lon = 20;
-        const int lat = 20;
-        VertexCount = lon * lat * 6;
-
-        vertex_full Sphere[lon * lat * 6];
-        Mesh::BuildSphere(Sphere, Sphere + VertexCount, Descriptor, lon, lat);*/
-
+        // Load obj and get the VBO
         VertexBuffer = GLCache.LoadObj("media/backpack.obj", 1.f, &VertexCount);
-
-        // Upload cube to gpu (VRAM)
-        //glGenBuffers(1, &VertexBuffer);
-        //glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-        //glBufferData(GL_ARRAY_BUFFER, VertexCount * sizeof(vertex_full), Sphere, GL_STATIC_DRAW);
 
         // Create a vertex array
         glGenVertexArrays(1, &VAO);
