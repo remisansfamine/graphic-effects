@@ -93,6 +93,9 @@
     <ClCompile Include="src\demo_skybox.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
+    <ClCompile Include="src\demo_shadowMap.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files\demo</Filter>
     </ClInclude>
     <ClInclude Include="src\demo_skybox.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_shadowMap.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
   </ItemGroup>

@@ -75,7 +75,6 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
 
     // Gen cube and its program
     {
-        //Skybox.Program = GL::CreateProgram(gPPVertShaderStr, gPPFragShaderStr);
         Skybox.Program = GL::CreateProgramFromFiles("src/skybox_shader.vert", "src/skybox_shader.frag");
 
         vertex_descriptor Descriptor = {};

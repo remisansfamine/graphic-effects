@@ -35,3 +35,4 @@ camera CameraUpdateFPS(const camera& PreviousCamera, const camera_inputs& Inputs
 camera CameraUpdateFreefly(const camera& PreviousCamera, const camera_inputs& Inputs);
 mat4 CameraGetMatrix(const camera& Camera);
 mat4 CameraGetInverseMatrix(const camera& Camera);
+mat4 CameraGetOrthographicShadow(const camera& Camera);

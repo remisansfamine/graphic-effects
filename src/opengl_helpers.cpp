@@ -54,7 +54,7 @@ light gDefaultLight = light(
 
 // Default material
 uniform material gDefaultMaterial = material(
-    vec3(0.0, 0.0, 0.0),
+    vec3(0.2, 0.2, 0.2),
     vec3(0.8, 0.8, 0.8),
     vec3(1.0, 1.0, 1.0),
     vec3(0.0, 0.0, 0.0),
