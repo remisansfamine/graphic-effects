@@ -203,9 +203,6 @@
     <ClInclude Include="src\demo_pbr.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
-    <ClInclude Include="src\ShaderPBR.h">
-      <Filter>Header Files\shaders</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vertexShader.vert">
@@ -217,10 +214,5 @@
     <None Include="src\ShaderPBR.frag">
       <Filter>Header Files\shaders</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Header Files\shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

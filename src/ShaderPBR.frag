@@ -1,4 +1,4 @@
-#version 330 core
+//#version 330 core
 
 // Varyings
 in vec2 vUV;
@@ -8,9 +8,6 @@ in vec3 vNormal;
 // Uniforms
 uniform mat4 uProjection;
 uniform vec3 uViewPosition;
-
-uniform sampler2D uDiffuseTexture;
-uniform sampler2D uEmissiveTexture;
 
 // Light structure
 struct light
@@ -25,35 +22,31 @@ struct light
 
 struct material
 {
-    vec3 ambient;
-    vec3 albedo;
-    vec3 specular;
-    vec3 emission;
+    sampler2D normalMap;
+    sampler2D albedoMap;
+    sampler2D metallicMap;
+    sampler2D roughnessMap;
+    sampler2D aoMap;
 
-    vec3 normal;
-    vec3 transmitance;
+    bool isTextured;
 
+    vec4 color;
+    vec3  albedo;
     float metallic;
-    float shininess;
     float roughness;
-
-    float ao; //Ambient occlusion
-    float ior;  // index of refraction
-    float alpha;  // 1 == opaque; 0 == fully transparent
+    float ao;
 };
 
-#define LIGHT_COUNT 5
+#define LIGHT_COUNT 4
 // Uniform blocks
 layout(std140) uniform uLightBlock
 {
 	light uLight[LIGHT_COUNT];
 };
 
-// Uniform blocks
-layout(std140) uniform uMaterialBlock
-{
-	material uMaterial;
-};
+uniform material uMaterial;
+
+
 
 const float PI = 3.14159265359;
 
@@ -102,34 +95,76 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }  
 
+vec3 getNormalFromMap()
+{
+    vec3 tangentNormal = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(vPos);
+    vec3 Q2  = dFdy(vPos);
+    vec2 st1 = dFdx(vUV);
+    vec2 st2 = dFdy(vUV);
+
+    vec3 N   = normalize(vNormal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+
 void main()
 {
     vec3 N = normalize(vNormal);
-    vec3 V = normalize(uViewPosition - vPos);
+    vec3 V = normalize(uViewPosition.xyz - vPos.xyz);
+
+    vec3 albedo;
+    vec3 normal;
+    float metallic;
+    float roughness;
+    float ao;
+
+    if (uMaterial.isTextured)
+    {
+        albedo    = pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
+        N     = getNormalFromMap();
+        metallic  = texture(uMaterial.metallicMap, vUV).r;
+        roughness = texture(uMaterial.roughnessMap, vUV).r;
+        ao        = texture(uMaterial.aoMap, vUV).r;
+    }
+    else
+    {
+        albedo    = uMaterial.albedo;
+        metallic  = uMaterial.metallic;
+        roughness = uMaterial.roughness;
+        ao        = uMaterial.ao;
+    }
     
     vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, uMaterial.albedo, uMaterial.metallic);
+    F0 = mix(F0, albedo, metallic);
     // reflectance equation
     vec3 Lo = vec3(0.0);
 
     for(int i = 0; i < LIGHT_COUNT; ++i) 
     {
+        if (!uLight[i].enabled)
+            continue;
+
         // calculate per-light radiance
-        vec3 L = normalize(uLight[i].position - vPos);
+        vec3 L = normalize(uLight[i].position.xyz - vPos.xyz);
         vec3 H = normalize(V + L);
 
-        float distance = length(uLight[i].position - vPos);
+        float distance = length(uLight[i].position.xyz - vPos.xyz);
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance = uLight[i].diffuse * attenuation;        
         
         // cook-torrance brdf
-        float NDF = DistributionGGX(N, H, uMaterial.roughness);        
-        float G   = GeometrySmith(N, V, L, uMaterial.roughness);      
+        float NDF = DistributionGGX(N, H, roughness);        
+        float G   = GeometrySmith(N, V, L, roughness);      
         vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
         
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - uMaterial.metallic;	  
+        kD *= 1.0 - metallic;	  
         
         vec3 numerator    = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
@@ -137,10 +172,10 @@ void main()
 
         // add to outgoing radiance Lo
         float NdotL = max(dot(N, L), 0.0);    
-        Lo += (kD * uMaterial.albedo / PI + uMaterial.specular) * radiance * NdotL; 
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL; 
     }   
 
-    vec3 ambient = vec3(0.03) * uMaterial.albedo * uMaterial.ao;
+    vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
