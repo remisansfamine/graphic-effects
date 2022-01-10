@@ -28,6 +28,12 @@ static void* ConvertVertices(void* VerticesDst, const vertex_descriptor& Descrip
         {
             v3* NormalDst = (v3*)(VertexStart + Descriptor.NormalOffset);
             *NormalDst = VertexSrc.Normal;
+
+            v3* TangentDst = (v3*)(VertexStart + Descriptor.TangentOffset);
+            *TangentDst = VertexSrc.Tangent;
+
+            v3* BitangentDst = (v3*)(VertexStart + Descriptor.BitangentOffset);
+            *BitangentDst = VertexSrc.Bitangent;
         }
 
         if (Descriptor.HasUV)
@@ -93,6 +99,8 @@ void* Mesh::BuildQuad(void* Vertices, void* End, const vertex_descriptor& Descri
         BottomRight,
         TopRight
     };
+
+    AddNormalMapParameters(&QuadVertices[0], 6);
 
     return ConvertVertices(Vertices, Descriptor, QuadVertices, 6);
 }
@@ -255,6 +263,35 @@ void* Mesh::BuildSphere(void* Vertices, void* End, const vertex_descriptor& Desc
     return Mesh::Transform(Vertices, Cur, Descriptor, Mat4::Scale({ 0.5f, 0.5f, 0.5f }));
 }
 
+void Mesh::AddNormalMapParameters(std::vector<vertex_full>& Mesh)
+{
+    AddNormalMapParameters(Mesh.data(), Mesh.size());
+}
+
+void Mesh::AddNormalMapParameters(vertex_full* Mesh, int VertexCount)
+{
+    for (size_t i = 0; i < VertexCount; i += 3)
+    {
+        vertex_full& vert1 = Mesh[i + 0];
+        vertex_full& vert2 = Mesh[i + 1];
+        vertex_full& vert3 = Mesh[i + 2];
+
+        const v3& deltaPos1 = vert2.Position - vert1.Position;
+        const v3& deltaPos2 = vert3.Position - vert1.Position;
+
+        const v2& deltaUV1 = vert2.UV - vert1.UV;
+        const v2& deltaUV2 = vert3.UV - vert1.UV;
+
+        float f = 1.f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        v3 tangent = f * (deltaUV2.y * deltaPos1 - deltaUV1.y * deltaPos2);
+        v3 bitangent = f * (deltaUV1.x * deltaPos2 - deltaUV2.x * deltaPos1);
+
+        vert1.Tangent = vert2.Tangent = vert3.Tangent = tangent;
+        vert1.Bitangent = vert2.Bitangent = vert3.Bitangent = bitangent;
+    }
+}
+
 // Implement dumb caching to avoid parsing .obj again and again
 bool LoadObjFromCache(std::vector<vertex_full>& Mesh, const char* Filename)
 {
@@ -399,6 +436,8 @@ bool Mesh::LoadObjNoConvertion(std::vector<vertex_full>& Mesh, const char* Filen
         v3& Position = Mesh[i].Position;
         Position *= Scale;
     }
+
+    AddNormalMapParameters(Mesh);
 
     return true;
 }

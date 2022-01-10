@@ -4,10 +4,14 @@
 in vec2 vUV;
 in vec3 vPos;
 in vec3 vNormal;
+in mat3 vTBN;
 
 // Uniforms
 uniform mat4 uProjection;
 uniform vec3 uViewPosition;
+
+mat3 TBN;
+vec3 Pos;
 
 // Light structure
 struct light
@@ -29,6 +33,7 @@ struct material
     sampler2D aoMap;
 
     bool isTextured;
+    bool hasNormalMap;
 
     vec4 color;
     vec3  albedo;
@@ -45,8 +50,6 @@ layout(std140) uniform uLightBlock
 };
 
 uniform material uMaterial;
-
-
 
 const float PI = 3.14159265359;
 
@@ -93,29 +96,15 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}  
-
-vec3 getNormalFromMap()
-{
-    vec3 tangentNormal = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
-
-    vec3 Q1  = dFdx(vPos);
-    vec3 Q2  = dFdy(vPos);
-    vec2 st1 = dFdx(vUV);
-    vec2 st2 = dFdy(vUV);
-
-    vec3 N   = normalize(vNormal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
 }
 
 void main()
 {
+    TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
+
+    Pos = TBN * vPos;
     vec3 N = normalize(vNormal);
-    vec3 V = normalize(uViewPosition.xyz - vPos.xyz);
+    vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
 
     vec3 albedo;
     vec3 normal;
@@ -125,17 +114,19 @@ void main()
 
     if (uMaterial.isTextured)
     {
+        if (uMaterial.hasNormalMap)
+            N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+
         albedo    = pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
-        N     = getNormalFromMap();
         metallic  = texture(uMaterial.metallicMap, vUV).r;
         roughness = texture(uMaterial.roughnessMap, vUV).r;
         ao        = texture(uMaterial.aoMap, vUV).r;
     }
     else
     {
-        albedo    = uMaterial.albedo;
         metallic  = uMaterial.metallic;
         roughness = uMaterial.roughness;
+        albedo    = uMaterial.albedo;
         ao        = uMaterial.ao;
     }
     
@@ -149,11 +140,13 @@ void main()
         if (!uLight[i].enabled)
             continue;
 
+        vec3 lightPos = TBN * uLight[i].position.xyz;
+
         // calculate per-light radiance
-        vec3 L = normalize(uLight[i].position.xyz - vPos.xyz);
+        vec3 L = normalize(lightPos - Pos.xyz);
         vec3 H = normalize(V + L);
 
-        float distance = length(uLight[i].position.xyz - vPos.xyz);
+        float distance = length(lightPos - Pos.xyz);
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance = uLight[i].diffuse * attenuation;        
         

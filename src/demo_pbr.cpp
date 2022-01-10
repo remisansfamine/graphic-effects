@@ -67,7 +67,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 
         {
             // Use vbo from GLCache
-            sphere.MeshBuffer = GLCache.LoadObj("media/Sphere.obj", 1.f, &sphere.MeshVertexCount);
+            sphere.MeshBuffer = GLCache.LoadObj("media/Sphere/Sphere.obj", 1.f, &sphere.MeshVertexCount);
 
             sphere.MeshDesc.Stride = sizeof(vertex_full);
             sphere.MeshDesc.HasNormal = true;
@@ -75,6 +75,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
             sphere.MeshDesc.PositionOffset = OFFSETOF(vertex_full, Position);
             sphere.MeshDesc.UVOffset = OFFSETOF(vertex_full, UV);
             sphere.MeshDesc.NormalOffset = OFFSETOF(vertex_full, Normal);
+            sphere.MeshDesc.TangentOffset = OFFSETOF(vertex_full, Tangent);
+            sphere.MeshDesc.BitangentOffset = OFFSETOF(vertex_full, Bitangent);
 
             glGenVertexArrays(1, &VAO);
             glBindVertexArray(VAO);
@@ -88,6 +90,10 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.UVOffset);
             glEnableVertexAttribArray(2);
             glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.NormalOffset);
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.TangentOffset);
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.BitangentOffset);
 
         }
     }
@@ -107,6 +113,12 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     materialPBR.aoMap = 0;
 
+    //materialPBR.normalMap = GLCache.LoadTexture("media/brickwall_normal.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //materialPBR.albedoMap = GLCache.LoadTexture("media/brickwall.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //materialPBR.metallicMap = 0;
+    //materialPBR.roughnessMap = 0;
+    //materialPBR.aoMap = 0;
+
     // Set uniforms that won't change
     {
         glUseProgram(Program);
@@ -121,6 +133,15 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 
 demo_pbr::~demo_pbr()
 {
+    glDeleteTextures(1, &materialPBR.normalMap);
+    glDeleteTextures(1, &materialPBR.albedoMap);
+    glDeleteTextures(1, &materialPBR.metallicMap);
+    glDeleteTextures(1, &materialPBR.roughnessMap);
+    glDeleteTextures(1, &materialPBR.aoMap);
+
+    glDeleteBuffers(1, &sphere.MeshBuffer);
+    glDeleteBuffers(1, &LightsUniformBuffer);
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteProgram(Program);
 }
@@ -176,7 +197,6 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
 
     // Set uniforms
     mat4 NormalMatrix = Mat4::Transpose(Mat4::Inverse(ModelMatrix));
-    //mat4 NormalMatrix = Mat4::Transpose(ModelMatrix);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uProjection"), 1, GL_FALSE, ProjectionMatrix.e);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uModel"), 1, GL_FALSE, ModelMatrix.e);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uView"), 1, GL_FALSE, ViewMatrix.e);
@@ -184,6 +204,7 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glUniform3fv(glGetUniformLocation(Program, "uViewPosition"), 1, Camera.Position.e);
 
     glUniform1i(glGetUniformLocation(Program, "uMaterial.isTextured"), materialPBR.isTextured);
+    glUniform1i(glGetUniformLocation(Program, "uMaterial.hasNormalMap"), materialPBR.hasNormal);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uMaterial.color"), 1, GL_FALSE, materialPBR.color.e);
     glUniform3fv(glGetUniformLocation(Program, "uMaterial.albedo"), 1, materialPBR.albedo.e);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.metallic"), materialPBR.metallic);
@@ -289,6 +310,7 @@ void demo_pbr::DisplayDebugUI()
 
                 if (ImGui::TreeNodeEx("Material"))
                 {
+                    ImGui::Checkbox("hasNormal", &materialPBR.hasNormal);
                     ImGui::ColorEdit4("Color", materialPBR.color.e);
                     ImGui::ColorEdit3("Albedo", materialPBR.albedo.e);
                     ImGui::SliderFloat("Metallic", &materialPBR.metallic, 0.f, 1.f);

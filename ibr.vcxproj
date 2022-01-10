@@ -163,6 +163,7 @@
     <ClCompile Include="src\demo_hdr.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
+    <ClCompile Include="src\demo_normal_map.cpp" />
     <ClCompile Include="src\demo_pbr.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="src\demo_hdr.h" />
     <ClInclude Include="src\demo_minimal.h" />
     <ClInclude Include="src\demo_fbo.h" />
+    <ClInclude Include="src\demo_normal_map.h" />
     <ClInclude Include="src\demo_pbr.h" />
     <ClInclude Include="src\demo_pg_billboard.h" />
     <ClInclude Include="src\demo_pg_billboard2.h" />

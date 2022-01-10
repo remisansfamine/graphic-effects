@@ -99,6 +99,9 @@
     <ClCompile Include="src\demo_skybox.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
+    <ClCompile Include="src\demo_normal_map.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
     <ClCompile Include="src\demo_pbr.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
@@ -200,19 +203,8 @@
     <ClInclude Include="src\demo_pg_skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\demo_pbr.h">
+    <ClInclude Include="src\demo_normal_map.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\vertexShader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\ShaderPBR.vert">
-      <Filter>Header Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderPBR.frag">
-      <Filter>Header Files\shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -19,6 +19,7 @@ struct MaterialPBR
     GLuint aoMap;
 
     bool isTextured;
+    bool hasNormal;
 
     v4 color;
     v3  albedo;
@@ -72,7 +73,6 @@ private:
     
     std::vector<GL::light> Lights;
     GLuint LightsUniformBuffer = 0;
-    GLuint MaterialsUniformBuffer = 0;
 
 };
 
