@@ -212,7 +212,10 @@
   <ItemGroup>
     <None Include="src\ShaderPBR.frag" />
     <None Include="src\ShaderPBR.vert" />
-    <None Include="src\vertexShader.vert" />
+    <None Include="src\SkyboxShader.frag" />
+    <None Include="src\SkyboxShader.vert" />
+    <None Include="src\SphereMapShader.frag" />
+    <None Include="src\SphereMapShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

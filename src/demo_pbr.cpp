@@ -16,12 +16,34 @@ demo_pbr::demo_pbr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
 void demo_pbr::SetupScene(GL::cache& GLCache)
 {
     SetupSphere(GLCache);
+    SetupCube(GLCache);
+    SetupLight();
+    SetupSphereMap(GLCache);
+    SetupSkybox();
+
+    //Set MultiSphereScene
+    {
+        enableSceneMultiSphere = false;
+        offsetZ = -20.f;
+        marging = 3.f;
+        sphereCount = 7;
+        origin = (((- marging) * (float)sphereCount) / 2.f) + marging / 2;
+    }
+}
+
+void demo_pbr::SetupLight()
+{
+    // Set uniforms that won't change
+    {
+        glUseProgram(Program);
+        glUniformBlockBinding(Program, glGetUniformBlockIndex(Program, "uLightBlock"), LIGHT_BLOCK_BINDING_POINT);
+    }
 
     Lights.resize(4);
 
     GL::light Light = {};
     Light.Enabled = true;
-    Light.Diffuse = {50,50,50};
+    Light.Diffuse = { 50,50,50 };
     Light.Specular = Light.Diffuse;
     Light.Attenuation = { 0.f, 0.f, 2.0f };
 
@@ -40,21 +62,6 @@ void demo_pbr::SetupScene(GL::cache& GLCache)
         glBufferData(GL_UNIFORM_BUFFER, Lights.size() * sizeof(GL::light), Lights.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    }
-
-    // Set uniforms that won't change
-    {
-        glUseProgram(Program);
-        glUniformBlockBinding(Program, glGetUniformBlockIndex(Program, "uLightBlock"), LIGHT_BLOCK_BINDING_POINT);
-    }
-
-    //Set MultiSphereScene
-    {
-        enableSceneMultiSphere = false;
-        offsetZ = -20.f;
-        marging = 3.f;
-        sphereCount = 7;
-        origin = (((- marging) * (float)sphereCount) / 2.f) + marging / 2;
     }
 }
 
@@ -131,6 +138,84 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 
 }
 
+void demo_pbr::SetupCube(GL::cache& GLCache)
+{
+    vertex_descriptor Descriptor = {};
+    Descriptor.Stride = sizeof(vertex);
+    Descriptor.HasUV = true;
+    Descriptor.PositionOffset = OFFSETOF(vertex, Position);
+    Descriptor.UVOffset = OFFSETOF(vertex, UV);
+
+    // Create cube vertices
+    vertex Cube[36];
+    cube.vertexCount = 36;
+    Mesh::BuildCube(Cube, Cube + cube.vertexCount, Descriptor);
+
+    // Upload cube to gpu (VRAM)
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, cube.vertexCount * sizeof(vertex), Cube, GL_STATIC_DRAW);
+
+    // Create a vertex array
+    glGenVertexArrays(1, &cube.VAO);
+    glBindVertexArray(cube.VAO);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(Descriptor.PositionOffset));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void demo_pbr::SetupSphereMap(GL::cache& GLCache)
+{
+    sphereMap.Program = GL::CreateProgramFromFiles("src/SphereMapShader.vert", "src/SphereMapShader.frag");
+    //Load HDR spheremap
+    sphereMap.hdrTexture = GLCache.LoadTexture("media/Arches_3k.hdr", IMG_FLIP | IMG_GEN_MIPMAPS);
+
+    glBindTexture(GL_TEXTURE_2D, sphereMap.hdrTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //Capture 6 face of a sphereMap to convert in cubemap
+    glGenFramebuffers(1, &sphereMap.captureFBO);
+    glGenRenderbuffers(1, &sphereMap.captureRBO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, sphereMap.captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, sphereMap.captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, sphereMap.captureRBO);
+
+    glUseProgram(sphereMap.Program);
+    glUniform1i(glGetUniformLocation(sphereMap.Program, "equirectangularMap"), 0);
+}
+
+void demo_pbr::SetupSkybox()
+{
+    skybox.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/SkyboxShader.frag");
+
+    //Environment cubemap
+    glGenTextures(1, &skybox.envCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.envCubemap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        // note that we store each face with 16 bit floating point values
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
+            512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glUseProgram(skybox.Program);
+    glUniform1i(glGetUniformLocation(skybox.Program, "environmentMap"), 0);
+}
+
 demo_pbr::~demo_pbr()
 {
     glDeleteTextures(1, &materialPBR.normalMap);
@@ -148,6 +233,45 @@ demo_pbr::~demo_pbr()
 
 void demo_pbr::Update(const platform_io& IO)
 {
+    //Setup spheremap
+    {
+        mat4 captureProjectionMatrix = Mat4::Perspective(Math::ToRadians(90.f), 1.0f, 0.1f, 10.f);
+
+        mat4 captureViews[] =
+        {
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {1.0f,  0.0f,  0.0f}, v3{0.0f, -1.0f,  0.0f}),
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {-1.0f,  0.0f,  0.0f},v3{0.0f, -1.0f,  0.0f}),
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  1.0f,  0.0f}, v3{0.0f,  0.0f,  1.0f}),
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f, -1.0f,  0.0f}, v3{0.0f,  0.0f, -1.0f}),
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
+           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
+        };
+
+        // convert HDR equirectangular environment map to cubemap equivalent
+        glUseProgram(sphereMap.Program);
+        glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uProjection"), 1, GL_FALSE, captureProjectionMatrix.e);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sphereMap.hdrTexture);
+
+        glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+        glBindFramebuffer(GL_FRAMEBUFFER, sphereMap.captureFBO);
+
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uView"), 1, GL_FALSE, captureViews[i].e);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, skybox.envCubemap, 0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glBindVertexArray(cube.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
+        }
+        glBindVertexArray(0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    //Render Scene
     const float AspectRatio = (float)IO.WindowWidth / (float)IO.WindowHeight;
     glViewport(0, 0, IO.WindowWidth, IO.WindowHeight);
 
@@ -184,6 +308,23 @@ void demo_pbr::Update(const platform_io& IO)
         RenderSphere(ProjectionMatrix, ViewMatrix, ModelMatrix);
     }
 
+    //Render Skybox
+    {
+        glDepthFunc(GL_LEQUAL);
+        // convert HDR equirectangular environment map to cubemap equivalent
+        glUseProgram(skybox.Program);
+        glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uProjection"), 1, GL_FALSE, ProjectionMatrix.e);
+        glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uView"), 1, GL_FALSE, ViewMatrix.e);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.envCubemap);
+
+        glBindVertexArray(cube.VAO);
+        glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
+
+        glBindVertexArray(0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
     // Display debug UI
     this->DisplayDebugUI();
 }

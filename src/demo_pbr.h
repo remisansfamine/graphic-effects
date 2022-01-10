@@ -9,6 +9,12 @@
 
 #include "opengl_helpers.h"
 
+struct vertex
+{
+    v3 Position;
+    v2 UV;
+};
+
 
 struct MaterialPBR
 {
@@ -32,11 +38,31 @@ struct MaterialPBR
 class demo_pbr : public demo
 {
 
-    struct sphere
+    struct Sphere
     {
         GLuint MeshBuffer = 0;
         int MeshVertexCount = 0;
         vertex_descriptor MeshDesc;
+    };
+
+    struct SphereMap
+    {
+        GLuint Program;
+        GLuint hdrTexture;
+        GLuint captureFBO; //Frame buffer
+        GLuint captureRBO; // Render buffer
+    };
+
+    struct Cube
+    {
+        GLuint VAO;
+        int vertexCount;
+    };
+
+    struct Skybox
+    {
+        GLuint Program;
+        GLuint envCubemap; //Environment cubemap
     };
 
 public:
@@ -44,6 +70,10 @@ public:
 
     void SetupScene(GL::cache& GLCache);
     void SetupSphere(GL::cache& GLCache);
+    void SetupCube(GL::cache& GLCache);
+    void SetupSphereMap(GL::cache& GLCache);
+    void SetupSkybox();
+    void SetupLight();
 
     virtual ~demo_pbr();
     virtual void Update(const platform_io& IO);
@@ -62,7 +92,10 @@ private:
     GLuint VAO = 0;
     MaterialPBR materialPBR;
 
-    sphere sphere;
+    Sphere sphere;
+    Cube cube;
+    SphereMap sphereMap;
+    Skybox skybox;
 
     bool enableSceneMultiSphere;
     float offsetZ;
