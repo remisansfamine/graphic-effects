@@ -50,7 +50,11 @@ layout(std140) uniform uLightBlock
 };
 
 uniform material uMaterial;
+
 uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D   brdfLUT;  
+
 uniform bool hasIrradianceMap;
 
 const float PI = 3.14159265359;
@@ -95,12 +99,12 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 
 //calculate the ratio between specular and diffuse reflection, 
 //or how much the surface reflects light versus how much it refracts light
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 } 
@@ -112,6 +116,7 @@ void main()
     Pos = TBN * vPos;
     vec3 N = normalize(vNormal);
     vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
+    vec3 R = reflect(-V, N); 
 
     vec3 albedo;
     vec3 normal;
@@ -160,7 +165,7 @@ void main()
         // cook-torrance brdf
         float NDF = DistributionGGX(N, H, roughness);        
         float G   = GeometrySmith(N, V, L, roughness);      
-        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
+        vec3 F    = FresnelSchlick(max(dot(H, V), 0.0), F0);       
         
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
@@ -179,11 +184,21 @@ void main()
 
     if (hasIrradianceMap)
     {
-        vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
+        vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+        vec3 kS = F;
         vec3 kD = 1.0 - kS;
+        kD *= 1.0 - metallic;	  
+  
         vec3 irradiance = texture(irradianceMap, N).rgb;
         vec3 diffuse    = irradiance * albedo;
-        ambient    = (kD * diffuse) * ao; 
+  
+        const float MAX_REFLECTION_LOD = 4.0;
+        vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;   
+        vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+        vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+  
+        ambient = (kD * diffuse + specular) * ao; 
     }
     else
     {

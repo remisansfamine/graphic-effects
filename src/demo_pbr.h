@@ -59,6 +59,12 @@ class demo_pbr : public demo
         int vertexCount;
     };
 
+    struct Quad
+    {
+        GLuint VAO = 0;
+        int vertexCount = 0;
+    };
+
     struct Skybox
     {
         GLuint Program;
@@ -72,16 +78,34 @@ class demo_pbr : public demo
         bool hasIrradianceMap;
     };
 
+    struct PrefilterMap
+    {
+        GLuint Program;
+        GLuint prefilterMap;
+        const int maxMipLevels = 5;
+        const int mipMapResolution = 128;
+    };
+
+    struct BDRF
+    {
+        GLuint Program;
+        GLuint LUTTexture;
+        const int resolution = 520;
+    };
+
 public:
     demo_pbr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug);
 
     void SetupScene(GL::cache& GLCache);
     void SetupSphere(GL::cache& GLCache);
     void SetupCube(GL::cache& GLCache);
+    void SetupQuad(GL::cache& GLCache);
     void SetupSphereMap(GL::cache& GLCache);
     void SetupSkybox();
     void SetupLight();
     void SetupIrradianceMap();
+    void SetupPrefilterMap();
+    void SetupBDRF();
 
     virtual ~demo_pbr();
     virtual void Update(const platform_io& IO);
@@ -102,9 +126,12 @@ private:
 
     Sphere sphere;
     Cube cube;
+    Quad quad;
     SphereMap sphereMap;
     Skybox skybox;
     Irradiance irradiance;
+    PrefilterMap prefilterMap;
+    BDRF brdf;
 
     bool enableSceneMultiSphere;
     float offsetZ;

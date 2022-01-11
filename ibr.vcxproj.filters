@@ -235,5 +235,14 @@
     <None Include="src\ShaderIrradianceMap.frag">
       <Filter>Header Files\shaders</Filter>
     </None>
+    <None Include="src\ShaderPrefilterMap.frag">
+      <Filter>Header Files\shaders</Filter>
+    </None>
+    <None Include="src\ShaderBRDF.vert">
+      <Filter>Header Files\shaders</Filter>
+    </None>
+    <None Include="src\ShaderBRDF.frag">
+      <Filter>Header Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -210,10 +210,13 @@
     <ClInclude Include="src\types.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\ShaderBRDF.frag" />
+    <None Include="src\ShaderBRDF.vert" />
     <None Include="src\ShaderIrradianceMap.frag" />
     <None Include="src\ShaderIrradianceMap.vert" />
     <None Include="src\ShaderPBR.frag" />
     <None Include="src\ShaderPBR.vert" />
+    <None Include="src\ShaderPrefilterMap.frag" />
     <None Include="src\SkyboxShader.frag" />
     <None Include="src\SkyboxShader.vert" />
     <None Include="src\SphereMapShader.frag" />

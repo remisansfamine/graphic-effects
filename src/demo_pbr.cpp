@@ -3,6 +3,8 @@
 #include "color.h"
 #include <imgui.h>
 
+#include "stb_image.h"
+#include <iostream>
 
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
@@ -17,10 +19,16 @@ void demo_pbr::SetupScene(GL::cache& GLCache)
 {
     SetupSphere(GLCache);
     SetupCube(GLCache);
+    SetupQuad(GLCache);
+
     SetupLight();
+
     SetupSphereMap(GLCache);
     SetupSkybox();
     SetupIrradianceMap();
+    SetupPrefilterMap();
+    SetupBDRF();
+
 
     //Set MultiSphereScene
     {
@@ -136,6 +144,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 3);
         glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 4);
         glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 5);
+        glUniform1i(glGetUniformLocation(Program, "prefilterMap"), 6);
+        glUniform1i(glGetUniformLocation(Program, "brdfLUT"), 7);
     }
 
 }
@@ -170,8 +180,40 @@ void demo_pbr::SetupCube(GL::cache& GLCache)
     glBindVertexArray(0);
 }
 
-#include "stb_image.h"
-#include <iostream>
+void demo_pbr::SetupQuad(GL::cache& GLCache)
+{
+    // Create a descriptor based on the `struct vertex` format
+    vertex_descriptor Descriptor = {};
+    Descriptor.Stride = sizeof(vertex);
+    Descriptor.HasUV = true;
+    Descriptor.PositionOffset = OFFSETOF(vertex, Position);
+    Descriptor.UVOffset = OFFSETOF(vertex, UV);
+
+    // Create a cube in RAM
+    unsigned int VBO;
+
+    vertex Quad[6];
+    quad.vertexCount = 6;
+    Mesh::BuildScreenQuad(Quad, Quad + quad.vertexCount, Descriptor, { 2.f,2.f });
+
+    // Upload cube to gpu (VRAM)
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, quad.vertexCount * sizeof(vertex), Quad, GL_STATIC_DRAW);
+
+    // Create a vertex array
+    glGenVertexArrays(1, &quad.VAO);
+    glBindVertexArray(quad.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, Position));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, UV));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
 void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 {
     sphereMap.Program = GL::CreateProgramFromFiles("src/SphereMapShader.vert", "src/SphereMapShader.frag");
@@ -210,6 +252,7 @@ void demo_pbr::SetupSphereMap(GL::cache& GLCache)
     glUseProgram(sphereMap.Program);
     glUniform1i(glGetUniformLocation(sphereMap.Program, "equirectangularMap"), 0);
 }
+
 
 void demo_pbr::SetupSkybox()
 {
@@ -252,6 +295,44 @@ void demo_pbr::SetupIrradianceMap()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+void demo_pbr::SetupPrefilterMap()
+{
+    prefilterMap.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/ShaderPrefilterMap.frag");
+
+    glGenTextures(1, &prefilterMap.prefilterMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 
+            prefilterMap.mipMapResolution, prefilterMap.mipMapResolution, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    glUseProgram(prefilterMap.Program);
+    glUniform1i(glGetUniformLocation(prefilterMap.Program, "environmentMap"), 0);
+}
+
+void demo_pbr::SetupBDRF()
+{
+    brdf.Program = GL::CreateProgramFromFiles("src/ShaderBRDF.vert", "src/ShaderBRDF.frag");
+
+    glGenTextures(1, &brdf.LUTTexture);
+
+    // pre-allocate enough memory for the LUT texture.
+    glBindTexture(GL_TEXTURE_2D, brdf.LUTTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, brdf.resolution, brdf.resolution, 0, GL_RG, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 demo_pbr::~demo_pbr()
 {
     glDeleteTextures(1, &materialPBR.normalMap);
@@ -270,6 +351,8 @@ demo_pbr::~demo_pbr()
 
 void demo_pbr::Update(const platform_io& IO)
 {
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
     mat4 captureProjectionMatrix = Mat4::Perspective(Math::ToRadians(90.f), 1.0f, 0.1f, 10.f);
     mat4 captureViews[] =
     {
@@ -283,8 +366,6 @@ void demo_pbr::Update(const platform_io& IO)
     
     //Setup spheremap
     {
-
-
         // convert HDR equirectangular environment map to cubemap equivalent
         glUseProgram(sphereMap.Program);
         glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uProjection"), 1, GL_FALSE, captureProjectionMatrix.e);
@@ -308,7 +389,6 @@ void demo_pbr::Update(const platform_io& IO)
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
 
     //Setup Irradiancemap
     {
@@ -334,6 +414,64 @@ void demo_pbr::Update(const platform_io& IO)
             glBindVertexArray(cube.VAO);
             glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    {
+        glUseProgram(prefilterMap.Program);
+        //prefilterShader.setInt("environmentMap", 0);
+        glUniformMatrix4fv(glGetUniformLocation(prefilterMap.Program, "uProjection"), 1, GL_FALSE, captureProjectionMatrix.e);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.envCubemap);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, sphereMap.captureFBO);
+
+        for (unsigned int mip = 0; mip < prefilterMap.maxMipLevels; ++mip)
+        {
+            // reisze framebuffer according to mip-level size.
+            unsigned int mipWidth = 128 * std::pow(0.5, mip);
+            unsigned int mipHeight = 128 * std::pow(0.5, mip);
+            glBindRenderbuffer(GL_RENDERBUFFER, sphereMap.captureRBO);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+            glViewport(0, 0, mipWidth, mipHeight);
+
+            float roughness = (float)mip / (float)(prefilterMap.maxMipLevels - 1);
+            glUniform1f(glGetUniformLocation(prefilterMap.Program, "roughness"), roughness);
+
+            for (unsigned int i = 0; i < 6; ++i)
+            {
+                glUniformMatrix4fv(glGetUniformLocation(prefilterMap.Program, "uView"), 1, GL_FALSE, captureViews[i].e);
+
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap.prefilterMap, mip);
+
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                
+                //RenderCube
+                glBindVertexArray(cube.VAO);
+                glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
+            }
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    //Setup BRDF
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, sphereMap.captureFBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, sphereMap.captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, brdf.resolution, brdf.resolution);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf.LUTTexture, 0);
+
+        glViewport(0, 0, brdf.resolution, brdf.resolution);
+        
+        glUseProgram(brdf.Program);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        //Render Quad
+        glBindVertexArray(quad.VAO);
+        glDrawArrays(GL_TRIANGLES, 0, quad.vertexCount);
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -441,6 +579,12 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     {
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
+
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, brdf.LUTTexture);
     }
 
     glActiveTexture(GL_TEXTURE0); // Reset active texture just in case
