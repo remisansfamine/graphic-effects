@@ -270,7 +270,7 @@ void GL::UploadTexture(const char* Filename, int ImageFlags, int* WidthOut, int*
 
     // Loading
     int Width, Height;
-    uint8_t* Image = stbi_load(Filename, &Width, &Height, (DesiredChannels == 0) ? &Channels : nullptr, DesiredChannels);
+	uint8_t* Image = stbi_load(Filename, &Width, &Height, (DesiredChannels == 0) ? &Channels : nullptr, DesiredChannels);
     if (Image == nullptr)
     {
         fprintf(stderr, "Image loading failed on '%s'\n", Filename);

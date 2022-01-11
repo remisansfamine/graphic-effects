@@ -229,5 +229,11 @@
     <None Include="src\SkyboxShader.frag">
       <Filter>Header Files\shaders</Filter>
     </None>
+    <None Include="src\ShaderIrradianceMap.vert">
+      <Filter>Header Files\shaders</Filter>
+    </None>
+    <None Include="src\ShaderIrradianceMap.frag">
+      <Filter>Header Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

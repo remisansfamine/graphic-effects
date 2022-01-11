@@ -65,6 +65,13 @@ class demo_pbr : public demo
         GLuint envCubemap; //Environment cubemap
     };
 
+    struct Irradiance
+    {
+        GLuint Program;
+        GLuint irradianceMap;
+        bool hasIrradianceMap;
+    };
+
 public:
     demo_pbr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug);
 
@@ -74,6 +81,7 @@ public:
     void SetupSphereMap(GL::cache& GLCache);
     void SetupSkybox();
     void SetupLight();
+    void SetupIrradianceMap();
 
     virtual ~demo_pbr();
     virtual void Update(const platform_io& IO);
@@ -96,6 +104,7 @@ private:
     Cube cube;
     SphereMap sphereMap;
     Skybox skybox;
+    Irradiance irradiance;
 
     bool enableSceneMultiSphere;
     float offsetZ;

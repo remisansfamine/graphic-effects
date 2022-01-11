@@ -20,6 +20,7 @@ void demo_pbr::SetupScene(GL::cache& GLCache)
     SetupLight();
     SetupSphereMap(GLCache);
     SetupSkybox();
+    SetupIrradianceMap();
 
     //Set MultiSphereScene
     {
@@ -108,11 +109,11 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     materialPBR.isTextured = true;
 
     materialPBR.color = { 1,1,1,1 };
-    materialPBR.albedo = {1,0,0};
+    materialPBR.albedo = {1,1,1};
 
     materialPBR.metallic = 1.f;
     materialPBR.roughness = 0.1f;
-    materialPBR.ao = 0; //Ambient occlusion
+    materialPBR.ao = 0.5f; //Ambient occlusion
 
     materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
@@ -134,6 +135,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         glUniform1i(glGetUniformLocation(Program, "uMaterial.metallicMap"), 2);
         glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 3);
         glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 4);
+        glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 5);
     }
 
 }
@@ -168,17 +170,33 @@ void demo_pbr::SetupCube(GL::cache& GLCache)
     glBindVertexArray(0);
 }
 
+#include "stb_image.h"
+#include <iostream>
 void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 {
     sphereMap.Program = GL::CreateProgramFromFiles("src/SphereMapShader.vert", "src/SphereMapShader.frag");
     //Load HDR spheremap
-    sphereMap.hdrTexture = GLCache.LoadTexture("media/Arches_3k.hdr", IMG_FLIP | IMG_GEN_MIPMAPS);
 
-    glBindTexture(GL_TEXTURE_2D, sphereMap.hdrTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrComponents;
+    float* data = stbi_loadf("media/Arches_3k.hdr", &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        glGenTextures(1, &sphereMap.hdrTexture);
+        glBindTexture(GL_TEXTURE_2D, sphereMap.hdrTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Failed to load HDR image." << std::endl;
+    }
 
     //Capture 6 face of a sphereMap to convert in cubemap
     glGenFramebuffers(1, &sphereMap.captureFBO);
@@ -216,6 +234,24 @@ void demo_pbr::SetupSkybox()
     glUniform1i(glGetUniformLocation(skybox.Program, "environmentMap"), 0);
 }
 
+void demo_pbr::SetupIrradianceMap()
+{
+    irradiance.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/ShaderIrradianceMap.frag");
+
+    glGenTextures(1, &irradiance.irradianceMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0,
+            GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 demo_pbr::~demo_pbr()
 {
     glDeleteTextures(1, &materialPBR.normalMap);
@@ -223,6 +259,7 @@ demo_pbr::~demo_pbr()
     glDeleteTextures(1, &materialPBR.metallicMap);
     glDeleteTextures(1, &materialPBR.roughnessMap);
     glDeleteTextures(1, &materialPBR.aoMap);
+    glDeleteTextures(1, &sphereMap.hdrTexture);
 
     glDeleteBuffers(1, &sphere.MeshBuffer);
     glDeleteBuffers(1, &LightsUniformBuffer);
@@ -233,19 +270,20 @@ demo_pbr::~demo_pbr()
 
 void demo_pbr::Update(const platform_io& IO)
 {
+    mat4 captureProjectionMatrix = Mat4::Perspective(Math::ToRadians(90.f), 1.0f, 0.1f, 10.f);
+    mat4 captureViews[] =
+    {
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {1.0f,  0.0f,  0.0f}, v3{0.0f, -1.0f,  0.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {-1.0f,  0.0f,  0.0f},v3{0.0f, -1.0f,  0.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  1.0f,  0.0f}, v3{0.0f,  0.0f,  1.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f, -1.0f,  0.0f}, v3{0.0f,  0.0f, -1.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
+    };
+    
     //Setup spheremap
     {
-        mat4 captureProjectionMatrix = Mat4::Perspective(Math::ToRadians(90.f), 1.0f, 0.1f, 10.f);
 
-        mat4 captureViews[] =
-        {
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {1.0f,  0.0f,  0.0f}, v3{0.0f, -1.0f,  0.0f}),
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {-1.0f,  0.0f,  0.0f},v3{0.0f, -1.0f,  0.0f}),
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  1.0f,  0.0f}, v3{0.0f,  0.0f,  1.0f}),
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f, -1.0f,  0.0f}, v3{0.0f,  0.0f, -1.0f}),
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
-           Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
-        };
 
         // convert HDR equirectangular environment map to cubemap equivalent
         glUseProgram(sphereMap.Program);
@@ -268,6 +306,34 @@ void demo_pbr::Update(const platform_io& IO)
             glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
         }
         glBindVertexArray(0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+
+    //Setup Irradiancemap
+    {
+        glUseProgram(irradiance.Program);
+
+        //irradianceShader.setInt("environmentMap", 0);
+        glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uProjection"), 1, GL_FALSE, captureProjectionMatrix.e);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.envCubemap);
+
+        glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+        glBindFramebuffer(GL_FRAMEBUFFER, sphereMap.captureFBO);
+
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uView"), 1, GL_FALSE, captureViews[i].e);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradiance.irradianceMap, 0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glBindVertexArray(cube.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -346,6 +412,7 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
 
     glUniform1i(glGetUniformLocation(Program, "uMaterial.isTextured"), materialPBR.isTextured);
     glUniform1i(glGetUniformLocation(Program, "uMaterial.hasNormalMap"), materialPBR.hasNormal);
+    glUniform1i(glGetUniformLocation(Program, "hasIrradianceMap"), irradiance.hasIrradianceMap);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uMaterial.color"), 1, GL_FALSE, materialPBR.color.e);
     glUniform3fv(glGetUniformLocation(Program, "uMaterial.albedo"), 1, materialPBR.albedo.e);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.metallic"), materialPBR.metallic);
@@ -356,24 +423,25 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, LightsUniformBuffer);
 
     glActiveTexture(GL_TEXTURE0);
-    if (materialPBR.normalMap != 0)
-        glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
 
     glActiveTexture(GL_TEXTURE1);
-    if (materialPBR.albedoMap != 0)
-        glBindTexture(GL_TEXTURE_2D, materialPBR.albedoMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.albedoMap);
 
     glActiveTexture(GL_TEXTURE2);
-    if (materialPBR.metallicMap != 0)
-        glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
 
     glActiveTexture(GL_TEXTURE3);
-    if (materialPBR.roughnessMap != 0)
-        glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
 
     glActiveTexture(GL_TEXTURE4);
-    if (materialPBR.aoMap != 0)
-        glBindTexture(GL_TEXTURE_2D, materialPBR.aoMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.aoMap);
+
+    if (irradiance.hasIrradianceMap)
+    {
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
+    }
 
     glActiveTexture(GL_TEXTURE0); // Reset active texture just in case
 
@@ -444,10 +512,10 @@ void demo_pbr::DisplayDebugUI()
         {
             ImGui::Checkbox("EnableSceneMultiSphere", &enableSceneMultiSphere);
             ImGui::Checkbox("IsTextured", &materialPBR.isTextured);
+            ImGui::Checkbox("hasIrradianceMap", &irradiance.hasIrradianceMap);
 
             if (!enableSceneMultiSphere)
             {
-
 
                 if (ImGui::TreeNodeEx("Material"))
                 {
@@ -456,6 +524,7 @@ void demo_pbr::DisplayDebugUI()
                     ImGui::ColorEdit3("Albedo", materialPBR.albedo.e);
                     ImGui::SliderFloat("Metallic", &materialPBR.metallic, 0.f, 1.f);
                     ImGui::SliderFloat("Roughness", &materialPBR.roughness, 0.f, 1.f);
+                    ImGui::SliderFloat("AO", &materialPBR.ao, 0.f, 1.f);
 
                     ImGui::TreePop();
                 }

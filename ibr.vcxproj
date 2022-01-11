@@ -210,6 +210,8 @@
     <ClInclude Include="src\types.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\ShaderIrradianceMap.frag" />
+    <None Include="src\ShaderIrradianceMap.vert" />
     <None Include="src\ShaderPBR.frag" />
     <None Include="src\ShaderPBR.vert" />
     <None Include="src\SkyboxShader.frag" />
