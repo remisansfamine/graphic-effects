@@ -274,7 +274,7 @@ demo_fbo::demo_fbo(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
         // Create a cube in RAM
         vertex Quad[6];
         PostProcessPassData.VertexCount = 6;
-        Mesh::BuildQuad(Quad, Quad + PostProcessPassData.VertexCount, Descriptor);
+        Mesh::BuildScreenQuad(Quad, Quad + PostProcessPassData.VertexCount, Descriptor, { 2.f, 2.f });
 
         // Upload cube to gpu (VRAM)
         glGenBuffers(1, &PostProcessPassData.VertexBuffer);

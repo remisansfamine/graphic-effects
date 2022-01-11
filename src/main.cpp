@@ -23,6 +23,7 @@
 #include "demo_minimal.h"
 #include "demo_fbo.h"
 #include "demo_skybox.h"
+#include "demo_shadowMap.h"
 #include "demo_base.h"
 #include "demo_hdr.h"
 #include "demo_normal_map.h"
@@ -30,6 +31,8 @@
 #include "demo_pg_billboard.h"
 #include "demo_pg_billboard2.h"
 #include "demo_pg_postprocess.h"
+#include "demo_instancing.h"
+
 // TODO(demo): Add headers here
 
 #if 0
@@ -247,8 +250,10 @@ int main(int argc, char* argv[])
         int DemoId = 0; // Change this to start with another demo
         std::unique_ptr<demo> Demos[] = 
         {
-            std::make_unique<demo_normal_map>(GLCache, GLDebug),
+            std::make_unique<demo_instancing>(GLCache, GLDebug),
             std::make_unique<demo_skybox>(GLCache, GLDebug),
+            std::make_unique<demo_shadowMap>(GLCache, GLDebug),
+            std::make_unique<demo_normal_map>(GLCache, GLDebug),
             std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_base>(GLCache, GLDebug),

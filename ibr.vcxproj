@@ -161,8 +161,10 @@
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\demo_base.cpp" />
     <ClCompile Include="src\demo_hdr.cpp" />
+    <ClCompile Include="src\demo_instancing.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
+    <ClCompile Include="src\demo_shadowMap.cpp" />
     <ClCompile Include="src\demo_normal_map.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -188,6 +190,7 @@
     <ClInclude Include="src\demo.h" />
     <ClInclude Include="src\demo_base.h" />
     <ClInclude Include="src\demo_hdr.h" />
+    <ClInclude Include="src\demo_instancing.h" />
     <ClInclude Include="src\demo_minimal.h" />
     <ClInclude Include="src\demo_fbo.h" />
     <ClInclude Include="src\demo_normal_map.h" />
@@ -195,6 +198,7 @@
     <ClInclude Include="src\demo_pg_billboard2.h" />
     <ClInclude Include="src\demo_pg_postprocess.h" />
     <ClInclude Include="src\demo_pg_skybox.h" />
+    <ClInclude Include="src\demo_shadowMap.h" />
     <ClInclude Include="src\demo_skybox.h" />
     <ClInclude Include="src\maths.h" />
     <ClInclude Include="src\maths_extension.h" />

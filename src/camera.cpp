@@ -116,3 +116,8 @@ mat4 CameraGetInverseMatrix(const camera& Camera)
     ViewTransform *= Mat4::Translate(-Camera.Position);
     return ViewTransform;
 }
+
+mat4 CameraGetOrthographicShadow(const camera& Camera)
+{
+    return Mat4::Orthographic(-10.f, 10.f, -10.f, 10.f, 0.1f, 180.f);
+}
