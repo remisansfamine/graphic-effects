@@ -129,12 +129,6 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     materialPBR.aoMap = 0;
 
-    //materialPBR.normalMap = GLCache.LoadTexture("media/brickwall_normal.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //materialPBR.albedoMap = GLCache.LoadTexture("media/brickwall.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //materialPBR.metallicMap = 0;
-    //materialPBR.roughnessMap = 0;
-    //materialPBR.aoMap = 0;
-
     // Set uniforms that won't change
     {
         glUseProgram(Program);
@@ -251,6 +245,7 @@ void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 
     glUseProgram(sphereMap.Program);
     glUniform1i(glGetUniformLocation(sphereMap.Program, "equirectangularMap"), 0);
+
 }
 
 
@@ -349,7 +344,7 @@ demo_pbr::~demo_pbr()
     glDeleteProgram(Program);
 }
 
-void demo_pbr::Update(const platform_io& IO)
+void demo_pbr::SetupPBR()
 {
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
@@ -363,7 +358,7 @@ void demo_pbr::Update(const platform_io& IO)
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
     };
-    
+
     //Setup spheremap
     {
         // convert HDR equirectangular environment map to cubemap equivalent
@@ -447,7 +442,7 @@ void demo_pbr::Update(const platform_io& IO)
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap.prefilterMap, mip);
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                
+
                 //RenderCube
                 glBindVertexArray(cube.VAO);
                 glDrawArrays(GL_TRIANGLES, 0, cube.vertexCount);
@@ -464,16 +459,24 @@ void demo_pbr::Update(const platform_io& IO)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf.LUTTexture, 0);
 
         glViewport(0, 0, brdf.resolution, brdf.resolution);
-        
+
         glUseProgram(brdf.Program);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         //Render Quad
         glBindVertexArray(quad.VAO);
         glDrawArrays(GL_TRIANGLES, 0, quad.vertexCount);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    PBRLoaded = true;
+}
+
+void demo_pbr::Update(const platform_io& IO)
+{
+    if (!PBRLoaded)
+        SetupPBR();
 
     //Render Scene
     const float AspectRatio = (float)IO.WindowWidth / (float)IO.WindowHeight;

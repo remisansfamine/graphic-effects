@@ -107,6 +107,8 @@ public:
     void SetupPrefilterMap();
     void SetupBDRF();
 
+    void SetupPBR();
+
     virtual ~demo_pbr();
     virtual void Update(const platform_io& IO);
 
@@ -139,9 +141,9 @@ private:
     int sphereCount;
     float origin;
 
-    
     std::vector<GL::light> Lights;
     GLuint LightsUniformBuffer = 0;
 
+    bool PBRLoaded = false;
 };
 
