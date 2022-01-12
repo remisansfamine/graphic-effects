@@ -46,18 +46,13 @@ in vec2 vUV;
 
 // Uniforms
 uniform sampler2D uColorTexture;
-uniform vec3 uColor;
 
 // Shader outputs
 out vec4 oColor;
 
-float Rand(vec2 co){
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
 void main()
 {
-    oColor = texture(uColorTexture, vUV) * vec4(uColor, 1.0);
+    oColor = texture(uColorTexture, vUV);
 })GLSL";
 
 demo_instancing::demo_instancing(GL::cache& GLCache, GL::debug& GLDebug)
@@ -74,23 +69,16 @@ demo_instancing::demo_instancing(GL::cache& GLCache, GL::debug& GLDebug)
         float randY = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
         float randZ = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 
+        float randRadius = (((float)rand() / (float)RAND_MAX) + 0.5f) * radius;
+
         v3 randVec = { randX, randY, randZ };
-        v3 superVec = Vec3::Normalize(randVec) * radius;//* (float)(rand() % 50);
+        v3 superVec = Vec3::Normalize(randVec) * randRadius;
 
-        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
-        /*float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(1000)) / 10.0f;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(1000)) / 10.0f;
-        float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
-        displacement = (rand() % (int)(1000)) / 10.0f;
-        float z = cos(angle) * radius + displacement;
+        float xRot = ((float)rand() / (float)RAND_MAX) * Math::TwoPi();
+        float yRot = ((float)rand() / (float)RAND_MAX) * Math::TwoPi();
+        float zRot = ((float)rand() / (float)RAND_MAX) * Math::TwoPi();
 
-        float newX = 200.f * cos(((rand() % (int)(1000)) / 1000.f) * Math::Pi());
-        float newY = 200.f * sin(((rand() % (int)(1000)) / 1000.f) * Math::Pi());
-        float newZ = 200.f * (2.f * ((rand() % (int)(1000)) / 1000.f) - 1.f);*/
-
-        offsets.push_back(Mat4::Translate(superVec)/* * Mat4::RotateX(x) * Mat4::RotateY(y) * Mat4::RotateZ(z)*/);
+        offsets.push_back(Mat4::Translate(superVec) * Mat4::RotateX(xRot) * Mat4::RotateY(yRot) * Mat4::RotateZ(zRot));
     }
 
     // Gen obj
@@ -159,25 +147,32 @@ demo_instancing::~demo_instancing()
     glDeleteProgram(Program);
 }
 
+void demo_instancing::DisplayDebugUI()
+{
+    if (ImGui::TreeNodeEx("demo_instancing", ImGuiTreeNodeFlags_Framed))
+    {
+        static bool swag = false;
+        ImGui::Checkbox("Are you swag ?", &swag);
+        ImGui::TreePop();
+    }
+}
+
 void demo_instancing::Update(const platform_io& IO)
 {
-    static float time = 0.f;
-    static v3 color = { 1.f, 1.f, 1.f };
+    mat4 rotate = Mat4::RotateX(IO.DeltaTime);
 
-    time += IO.DeltaTime;
-
-    /*if (time > 0.5f)
+    for (int i = 0; i < offsets.size(); i++)
     {
-        color.r = (float)rand() / RAND_MAX;
-        color.g = (float)rand() / RAND_MAX;
-        color.b = (float)rand() / RAND_MAX;
+        //if (i == 25000 || i == 22000 || i == 1100 || i == 10000 || i == 5 ||
+            //i == 12 || i == 30 || i == 45 || i == 150 || i == 26)
+            //continue;
 
-        time = 0.f;
-    }*/
+        offsets[i] *= rotate;
+    }
 
-    color.r = (sinf(time) + 1) * 0.5f;
-    color.g = (cosf(time) + 1) * 0.5f;
-    color.b = (cosf(time) * sinf(time) + 1) * 0.5f;
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, offsets.size() * sizeof(mat4), offsets.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     Camera = CameraUpdateFreefly(Camera, IO.CameraInputs);
 
@@ -205,9 +200,10 @@ void demo_instancing::Update(const platform_io& IO)
     mat4 ViewProj = ProjectionMatrix * ViewMatrix;
 
     glUniformMatrix4fv(glGetUniformLocation(Program, "uViewProj"), 1, GL_FALSE, ViewProj.e);
-    glUniform3fv(glGetUniformLocation(Program, "uColor"), 1, color.e);
 
     glBindVertexArray(VAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, offsets.size());
     glBindVertexArray(0);
+
+    DisplayDebugUI();
 }

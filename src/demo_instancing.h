@@ -13,6 +13,8 @@ public:
     virtual ~demo_instancing();
     virtual void Update(const platform_io& IO);
 
+    void DisplayDebugUI();
+
 private:
     GL::cache& GLCache;
     GL::debug& GLDebug;
@@ -31,4 +33,6 @@ private:
     GLuint VBO = 0;
     GLuint VertexBuffer = 0;
     int VertexCount = 0;
+
+    bool Wireframe = false;
 };
