@@ -164,6 +164,7 @@
     <ClCompile Include="src\demo_instancing.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
+    <ClCompile Include="src\demo_npr.cpp" />
     <ClCompile Include="src\demo_shadowMap.cpp" />
     <ClCompile Include="src\demo_normal_map.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="src\demo_minimal.h" />
     <ClInclude Include="src\demo_fbo.h" />
     <ClInclude Include="src\demo_normal_map.h" />
+    <ClInclude Include="src\demo_npr.h" />
     <ClInclude Include="src\demo_pg_billboard.h" />
     <ClInclude Include="src\demo_pg_billboard2.h" />
     <ClInclude Include="src\demo_pg_postprocess.h" />

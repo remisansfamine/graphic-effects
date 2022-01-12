@@ -25,6 +25,7 @@
     <ClCompile Include="src\opengl_helpers_wireframe.cpp" />
     <ClCompile Include="src\tavern_scene.cpp" />
     <ClCompile Include="src\demo_instancing.cpp" />
+    <ClCompile Include="src\demo_npr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
@@ -62,5 +63,6 @@
     <ClInclude Include="src\tavern_scene.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\demo_instancing.h" />
+    <ClInclude Include="src\demo_npr.h" />
   </ItemGroup>
 </Project>
