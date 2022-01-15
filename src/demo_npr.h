@@ -13,7 +13,7 @@ public:
     virtual ~demo_npr();
     virtual void Update(const platform_io& IO);
 
-    void RenderOutline();
+    void RenderOutline(const mat4& ModelViewProj);
 
     void DisplayDebugUI();
 
@@ -24,15 +24,19 @@ private:
     GLuint OutlineProgram;
     GLuint OutlineFBO;
     GLuint OutlineTexture;
+    GLuint RenderBuffer;
 
     GLuint QuadVAO;
-    GLuint QuadFBO;
+    GLuint QuadVBO;
 
     // 3d camera
     camera Camera = {};
 
     v4 lightPos = { 1.f, 3.f, 1.f, 0.f };
     v3 color = { 0.6f, 0.1f, 0.2f };
+
+    v2 smoothStep = { 0.4f, 0.6f };
+    v3 edgeColor = { 0.f, 0.f, 0.f };
 
     // GL objects needed by this demo
     GLuint Program = 0;
