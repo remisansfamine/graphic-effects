@@ -21,6 +21,7 @@
 #include "pg.h"
 
 #include "demo_minimal.h"
+#include "demo_deferred_shading.h"
 #include "demo_fbo.h"
 #include "demo_skybox.h"
 #include "demo_shadowMap.h"
@@ -251,6 +252,7 @@ int main(int argc, char* argv[])
         int DemoId = 0; // Change this to start with another demo
         std::unique_ptr<demo> Demos[] = 
         {
+            std::make_unique<demo_deferred_shading>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_npr>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_instancing>(GLCache, GLDebug),
             std::make_unique<demo_skybox>(GLCache, GLDebug),

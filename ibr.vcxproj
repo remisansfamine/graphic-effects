@@ -160,6 +160,7 @@
     <ClCompile Include="externals\tiny_obj_loader.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\demo_base.cpp" />
+    <ClCompile Include="src\demo_deferred_shading.cpp" />
     <ClCompile Include="src\demo_hdr.cpp" />
     <ClCompile Include="src\demo_instancing.cpp" />
     <ClCompile Include="src\demo_minimal.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="src\color.h" />
     <ClInclude Include="src\demo.h" />
     <ClInclude Include="src\demo_base.h" />
+    <ClInclude Include="src\demo_deferred_shading.h" />
     <ClInclude Include="src\demo_hdr.h" />
     <ClInclude Include="src\demo_instancing.h" />
     <ClInclude Include="src\demo_minimal.h" />
