@@ -115,25 +115,27 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     }
 
     //Metalic and roughness textures
-    //{
-    //
-    //    materialPBR.albedo = { 1,1,1 };
-    //    materialPBR.metallic = 1.f;
-    //    materialPBR.roughness = 1.f;
-    //    materialPBR.ao = 1.f; //Ambient occlusion
-    //    materialPBR.hasNormal = true;
-    //    irradiance.hasIrradianceMap = true;
-    //
-    //    materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //    materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //    materialPBR.metallicMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //    materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    //}
+    {
+    
+        materialPBR.albedo = { 1,1,1 };
+        materialPBR.specular = 1.f;
+        materialPBR.metallic = 1.f;
+        materialPBR.roughness = 1.f;
+        materialPBR.ao = 1.f; //Ambient occlusion
+        materialPBR.hasNormal = true;
+        irradiance.hasIrradianceMap = true;
+    
+        materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.metallicMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    }
 
-    ////No Textures
+    //No Textures
     //{
     //    materialPBR.albedo = { 1,1,1 };
+    //    materialPBR.specular = 1.f;
     //    materialPBR.metallic = 1.f;
     //    materialPBR.roughness = 1.f;
     //    materialPBR.ao = 1.f; //Ambient occlusion
@@ -147,24 +149,25 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //}
 
-    //Anisotrope and clear coat test
-    {
-        materialPBR.albedo = { 1,1,1 };
-        materialPBR.metallic = 1.f;
-        materialPBR.roughness = 1.f;
-        materialPBR.ao = 1.f; //Ambient occlusion
-        materialPBR.hasNormal = false;
-        materialPBR.clearCoat = 0.8f;
-        materialPBR.clearCoatRoughness = 0.f;
-        irradiance.hasIrradianceMap = true;
-
-        materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_basecolor_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.normalMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_normal_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_roughness_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-
-    }
+    ////Anisotrope and clear coat test
+    //{
+    //    materialPBR.albedo = { 1,1,1 };
+    //    materialPBR.specular = 1.f;
+    //    materialPBR.metallic = 1.f;
+    //    materialPBR.roughness = 1.f;
+    //    materialPBR.ao = 1.f; //Ambient occlusion
+    //    materialPBR.hasNormal = false;
+    //    materialPBR.clearCoat = 0.8f;
+    //    materialPBR.clearCoatRoughness = 0.f;
+    //    irradiance.hasIrradianceMap = true;
+    //
+    //    materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_basecolor_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.normalMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_normal_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_roughness_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //
+    //}
 
     // Set uniforms that won't change
     {
@@ -595,6 +598,7 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glUniform1i(glGetUniformLocation(Program, "uMaterial.hasNormalMap"), materialPBR.hasNormal);
     glUniform1i(glGetUniformLocation(Program, "hasIrradianceMap"), irradiance.hasIrradianceMap);
     glUniform3fv(glGetUniformLocation(Program, "uMaterial.albedo"), 1, materialPBR.albedo.e);
+    glUniform1f(glGetUniformLocation(Program, "uMaterial.specular"), materialPBR.specular);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.metallic"), materialPBR.metallic);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.roughness"), materialPBR.roughness);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.ao"), materialPBR.ao);
@@ -707,6 +711,7 @@ void demo_pbr::DisplayDebugUI()
                 {
                     ImGui::Checkbox("hasNormal", &materialPBR.hasNormal);
                     ImGui::ColorEdit3("Albedo", materialPBR.albedo.e);
+                    ImGui::SliderFloat("Specular", &materialPBR.specular, 0.f, 1.f);
                     ImGui::SliderFloat("Metallic", &materialPBR.metallic, 0.f, 1.f);
                     ImGui::SliderFloat("Roughness", &materialPBR.roughness, 0.f, 1.f);
                     ImGui::SliderFloat("AO", &materialPBR.ao, 0.f, 1.f);

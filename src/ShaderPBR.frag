@@ -35,6 +35,7 @@ struct material
     bool hasNormalMap;
 
     vec3  albedo;
+    float specular;
     float metallic;
     float roughness;
     float ao;
@@ -117,7 +118,7 @@ float V_Kelemen(float clearCoatRoughness, float LdotH)
 
 
 //Specular IBL
-vec3 getIBLRadianceGGX(float NdotV, vec3 R, float roughness, vec3 F0)
+vec3 getIBLRadianceGGX(float NdotV, vec3 R, float roughness, vec3 F0, float specularWeight)
 {
     vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
     vec2 envBRDF = texture(brdfLUT, brdfSamplePoint).rg;
@@ -133,11 +134,11 @@ vec3 getIBLRadianceGGX(float NdotV, vec3 R, float roughness, vec3 F0)
     vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
     vec3 FssEss = kS * envBRDF.x + envBRDF.y;
 
-    return specularLight * FssEss;
+    return specularWeight * specularLight * FssEss;
 }
 
 //Diffuse IBL
-vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo, vec3 F0)
+vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo, vec3 F0, float specularWeight)
 {
     vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
     vec2 envBRDF = texture(brdfLUT, brdfSamplePoint).rg;
@@ -148,11 +149,11 @@ vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo,
     // Roughness dependent fresnel, from Fdez-Aguera
     vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
     vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
-    vec3 FssEss = kS * envBRDF.x + envBRDF.y;
+    vec3 FssEss = specularWeight * kS * envBRDF.x + envBRDF.y;
 
     // Multiple scattering, from Fdez-Aguera
     float Ems = (1.0 - (envBRDF.x + envBRDF.y));
-    vec3 F_avg = (F0 + (1.0 - F0) / 21.0);
+    vec3 F_avg = specularWeight * (F0 + (1.0 - F0) / 21.0);
     vec3 FmsEms = Ems * FssEss * F_avg / (1.0 - F_avg * Ems);
     vec3 kD = albedo * (1.0 - FssEss + FmsEms);
 
@@ -168,16 +169,11 @@ void main()
     vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
     vec3 R = reflect(-V, N); 
 
-    vec3 albedo;
-    vec3 normal;
-    float metallic;
-    float roughness;
-    float ao;
-
-    albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
-    metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
-    roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
-    ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
+    vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
+    float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
+    float roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
+    float ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
+    float specularWeight = uMaterial.specular;
 
     if (uMaterial.hasNormalMap)
             N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
@@ -213,7 +209,7 @@ void main()
         vec3 F    = FresnelSchlick(max(dot(H, V), 0.0), F0);       
         
         vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
+        vec3 kD = vec3(1.0) - specularWeight * kS;
         kD *= 1.0 - metallic;	  
         
         vec3 numerator    = NDF * G * F;
@@ -231,7 +227,7 @@ void main()
         float NdotL = max(dot(N, L), 0.0);
 
         clearCoat += (Frc * NdotL ) * attenuation;
-        Lo += ((kD * albedo / PI + specular) * radiance * NdotL); 
+        Lo += ((kD * albedo / PI + specular * specularWeight) * radiance * NdotL); 
     }   
 
     vec3 ambient;
@@ -241,12 +237,12 @@ void main()
         float NdotV = max(dot(N, V), 0.0);
 
         /* -- IBL Irradiance -- */
-        vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0);
-        vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0);
+        vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0, specularWeight);
+        vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0, specularWeight);
         ambient = (specular + diffuse) * ao;
 
         /* -- Clear Coat IBL --*/
-        clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0);
+        clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0, 1.0);
     }
     else
     {

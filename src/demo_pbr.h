@@ -27,6 +27,7 @@ struct MaterialPBR
     bool hasNormal;
 
     v3  albedo;
+    float specular;
     float metallic;
     float roughness;
     float ao;
