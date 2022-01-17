@@ -165,6 +165,7 @@
     <ClCompile Include="src\demo_minimal.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
     <ClCompile Include="src\demo_npr.cpp" />
+    <ClCompile Include="src\demo_picking.cpp" />
     <ClCompile Include="src\demo_shadowMap.cpp" />
     <ClCompile Include="src\demo_normal_map.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="src\demo_pg_billboard2.h" />
     <ClInclude Include="src\demo_pg_postprocess.h" />
     <ClInclude Include="src\demo_pg_skybox.h" />
+    <ClInclude Include="src\demo_picking.h" />
     <ClInclude Include="src\demo_shadowMap.h" />
     <ClInclude Include="src\demo_skybox.h" />
     <ClInclude Include="src\maths.h" />

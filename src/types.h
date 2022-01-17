@@ -22,6 +22,16 @@ struct v3
     };
 };
 
+struct v3I
+{
+    union
+    {
+        struct { int x, y, z; };
+        struct { int r, g, b; };
+        int e[3];
+    };
+};
+
 struct v4
 {
     union
