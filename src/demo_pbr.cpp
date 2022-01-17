@@ -114,6 +114,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         }
     }
 
+    //Metalic and roughness textures
     //{
     //
     //    materialPBR.albedo = { 1,1,1 };
@@ -130,19 +131,39 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //}
 
+    ////No Textures
+    //{
+    //    materialPBR.albedo = { 1,1,1 };
+    //    materialPBR.metallic = 1.f;
+    //    materialPBR.roughness = 1.f;
+    //    materialPBR.ao = 1.f; //Ambient occlusion
+    //    materialPBR.hasNormal = false;
+    //    irradiance.hasIrradianceMap = true;
+    //
+    //    materialPBR.normalMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //}
+
+    //Anisotrope and clear coat test
     {
         materialPBR.albedo = { 1,1,1 };
         materialPBR.metallic = 1.f;
         materialPBR.roughness = 1.f;
         materialPBR.ao = 1.f; //Ambient occlusion
         materialPBR.hasNormal = false;
+        materialPBR.clearCoat = 0.8f;
+        materialPBR.clearCoatRoughness = 0.f;
         irradiance.hasIrradianceMap = true;
 
-        materialPBR.normalMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_basecolor_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.normalMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_normal_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_roughness_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+
     }
 
     // Set uniforms that won't change

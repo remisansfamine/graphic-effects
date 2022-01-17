@@ -115,6 +115,50 @@ float V_Kelemen(float clearCoatRoughness, float LdotH)
     return clearCoatRoughness / (LdotH * LdotH);
 }
 
+
+//Specular IBL
+vec3 getIBLRadianceGGX(float NdotV, vec3 R, float roughness, vec3 F0)
+{
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    vec2 envBRDF = texture(brdfLUT, brdfSamplePoint).rg;
+
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;   
+
+    vec3 specularLight = prefilteredColor.rgb;
+
+    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
+    // Roughness dependent fresnel, from Fdez-Aguera
+    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
+    vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 FssEss = kS * envBRDF.x + envBRDF.y;
+
+    return specularLight * FssEss;
+}
+
+//Diffuse IBL
+vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo, vec3 F0)
+{
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    vec2 envBRDF = texture(brdfLUT, brdfSamplePoint).rg;
+
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+
+    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
+    // Roughness dependent fresnel, from Fdez-Aguera
+    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
+    vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 FssEss = kS * envBRDF.x + envBRDF.y;
+
+    // Multiple scattering, from Fdez-Aguera
+    float Ems = (1.0 - (envBRDF.x + envBRDF.y));
+    vec3 F_avg = (F0 + (1.0 - F0) / 21.0);
+    vec3 FmsEms = Ems * FssEss * F_avg / (1.0 - F_avg * Ems);
+    vec3 kD = albedo * (1.0 - FssEss + FmsEms);
+
+    return (FmsEms + kD) * irradiance;
+}
+
 void main()
 {
     TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
@@ -145,7 +189,7 @@ void main()
     
     //clearCoat
     float clearCoatRoughness = clamp(uMaterial.clearCoatRoughness, 0.089, 1.0);
-    clearCoatRoughness = clearCoatRoughness * clearCoatRoughness;
+    clearCoatRoughness = pow(clearCoatRoughness, 2.0);
     vec3 clearCoat = vec3(0.0);
 
     for(int i = 0; i < LIGHT_COUNT; ++i) 
@@ -163,7 +207,6 @@ void main()
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance = uLight[i].diffuse * attenuation;        
         
-
         // cook-torrance brdf
         float NDF = DistributionGGX(N, H, roughness);        
         float G   = GeometrySmith(N, V, L, roughness);      
@@ -195,35 +238,15 @@ void main()
 
     if (hasIrradianceMap)
     {
-        /* -- IBL Irradiance -- */
-        vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+        float NdotV = max(dot(N, V), 0.0);
 
-        vec3 kS = F;
-        vec3 kD = 1.0 - kS;
-        kD *= 1.0 - metallic;	  
-  
-        vec3 irradiance = texture(irradianceMap, N).rgb;
-        vec3 diffuse    = irradiance * albedo;
-  
-        const float MAX_REFLECTION_LOD = 4.0;
-        vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;   
-        vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-        vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-  
-        ambient = (kD * diffuse + specular) * ao; 
+        /* -- IBL Irradiance -- */
+        vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0);
+        vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0);
+        ambient = (specular + diffuse) * ao;
 
         /* -- Clear Coat IBL --*/
-        vec3 Fc = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, clearCoatRoughness);
-
-        vec3 kSc = Fc;
-        vec3 kDc = 1.0 - kSc;
-        kDc *= 1.0 - metallic;
-        
-        vec3 prefilteredColor_c = textureLod(prefilterMap, R,  clearCoatRoughness * MAX_REFLECTION_LOD).rgb;   
-        vec2 envBRDF_c  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), clearCoatRoughness)).rg;
-        vec3 specular_c = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-
-        clearCoat += (kDc * diffuse + specular_c) * ao;
+        clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0);
     }
     else
     {
@@ -231,7 +254,6 @@ void main()
     }
 
     vec3 color = ambient + Lo;
-    //vec3 color = ambient + specular + diffuse;
 	
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  //Gamma correction
