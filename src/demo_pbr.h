@@ -24,14 +24,15 @@ struct MaterialPBR
     GLuint roughnessMap;
     GLuint aoMap;
 
-    bool isTextured;
     bool hasNormal;
 
-    v4 color;
     v3  albedo;
     float metallic;
     float roughness;
     float ao;
+
+    float clearCoat;
+    float clearCoatRoughness;
 
 };
 

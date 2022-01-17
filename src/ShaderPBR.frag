@@ -32,14 +32,15 @@ struct material
     sampler2D roughnessMap;
     sampler2D aoMap;
 
-    bool isTextured;
     bool hasNormalMap;
 
-    vec4 color;
     vec3  albedo;
     float metallic;
     float roughness;
     float ao;
+
+    float clearCoat;
+    float clearCoatRoughness;
 };
 
 #define LIGHT_COUNT 4
@@ -109,6 +110,11 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 } 
 
+float V_Kelemen(float clearCoatRoughness, float LdotH)
+{
+    return clearCoatRoughness / (LdotH * LdotH);
+}
+
 void main()
 {
     TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
@@ -124,28 +130,23 @@ void main()
     float roughness;
     float ao;
 
-    if (uMaterial.isTextured)
-    {
-        if (uMaterial.hasNormalMap)
-            N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+    albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
+    metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
+    roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
+    ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
 
-        albedo    = pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
-        metallic  = texture(uMaterial.metallicMap, vUV).r;
-        roughness = texture(uMaterial.roughnessMap, vUV).r;
-        ao        = texture(uMaterial.aoMap, vUV).r;
-    }
-    else
-    {
-        metallic  = uMaterial.metallic;
-        roughness = uMaterial.roughness;
-        albedo    = uMaterial.albedo;
-        ao        = uMaterial.ao;
-    }
+    if (uMaterial.hasNormalMap)
+            N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
     
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
     // reflectance equation
     vec3 Lo = vec3(0.0);
+    
+    //clearCoat
+    float clearCoatRoughness = clamp(uMaterial.clearCoatRoughness, 0.089, 1.0);
+    clearCoatRoughness = clearCoatRoughness * clearCoatRoughness;
+    vec3 clearCoat = vec3(0.0);
 
     for(int i = 0; i < LIGHT_COUNT; ++i) 
     {
@@ -162,6 +163,7 @@ void main()
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance = uLight[i].diffuse * attenuation;        
         
+
         // cook-torrance brdf
         float NDF = DistributionGGX(N, H, roughness);        
         float G   = GeometrySmith(N, V, L, roughness);      
@@ -175,15 +177,25 @@ void main()
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
         vec3 specular     = numerator / denominator;  
 
+
+        //Clear Coat BDRF
+        float Dc = DistributionGGX(N, H, clearCoatRoughness);        
+        float Vc = V_Kelemen(clearCoatRoughness, max(dot(L,H), 0.0));      
+        vec3 Fc  = FresnelSchlick(max(dot(H, V), 0.0), F0);  
+        vec3 Frc = Dc * Vc * Fc;
+
         // add to outgoing radiance Lo
-        float NdotL = max(dot(N, L), 0.0);    
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL; 
+        float NdotL = max(dot(N, L), 0.0);
+
+        clearCoat += (Frc * NdotL ) * attenuation;
+        Lo += ((kD * albedo / PI + specular) * radiance * NdotL); 
     }   
 
     vec3 ambient;
 
     if (hasIrradianceMap)
     {
+        /* -- IBL Irradiance -- */
         vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 
         vec3 kS = F;
@@ -199,6 +211,19 @@ void main()
         vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
   
         ambient = (kD * diffuse + specular) * ao; 
+
+        /* -- Clear Coat IBL --*/
+        vec3 Fc = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, clearCoatRoughness);
+
+        vec3 kSc = Fc;
+        vec3 kDc = 1.0 - kSc;
+        kDc *= 1.0 - metallic;
+        
+        vec3 prefilteredColor_c = textureLod(prefilterMap, R,  clearCoatRoughness * MAX_REFLECTION_LOD).rgb;   
+        vec2 envBRDF_c  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), clearCoatRoughness)).rg;
+        vec3 specular_c = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+        clearCoat += (kDc * diffuse + specular_c) * ao;
     }
     else
     {
@@ -206,9 +231,16 @@ void main()
     }
 
     vec3 color = ambient + Lo;
+    //vec3 color = ambient + specular + diffuse;
 	
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  //Gamma correction
-    
+
+    //clearCoat
+    clearCoat = clearCoat * uMaterial.clearCoat;
+    vec3 clearCoatFresnel = FresnelSchlick(max(dot(N,V), 0.0), F0);
+
+
+    color = color * (1.0 - uMaterial.clearCoat * clearCoatFresnel) + clearCoat;
     oColor = vec4(color, 1.0);
 }

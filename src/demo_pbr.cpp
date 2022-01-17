@@ -114,20 +114,36 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         }
     }
 
-    materialPBR.isTextured = true;
+    //{
+    //
+    //    materialPBR.albedo = { 1,1,1 };
+    //    materialPBR.metallic = 1.f;
+    //    materialPBR.roughness = 1.f;
+    //    materialPBR.ao = 1.f; //Ambient occlusion
+    //    materialPBR.hasNormal = true;
+    //    irradiance.hasIrradianceMap = true;
+    //
+    //    materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.metallicMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //}
 
-    materialPBR.color = { 1,1,1,1 };
-    materialPBR.albedo = {1,1,1};
+    {
+        materialPBR.albedo = { 1,1,1 };
+        materialPBR.metallic = 1.f;
+        materialPBR.roughness = 1.f;
+        materialPBR.ao = 1.f; //Ambient occlusion
+        materialPBR.hasNormal = false;
+        irradiance.hasIrradianceMap = true;
 
-    materialPBR.metallic = 1.f;
-    materialPBR.roughness = 0.1f;
-    materialPBR.ao = 0.5f; //Ambient occlusion
-
-    materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    materialPBR.metallicMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    materialPBR.aoMap = 0;
+        materialPBR.normalMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    }
 
     // Set uniforms that won't change
     {
@@ -555,14 +571,14 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glUniformMatrix4fv(glGetUniformLocation(Program, "uModelNormalMatrix"), 1, GL_FALSE, NormalMatrix.e);
     glUniform3fv(glGetUniformLocation(Program, "uViewPosition"), 1, Camera.Position.e);
 
-    glUniform1i(glGetUniformLocation(Program, "uMaterial.isTextured"), materialPBR.isTextured);
     glUniform1i(glGetUniformLocation(Program, "uMaterial.hasNormalMap"), materialPBR.hasNormal);
     glUniform1i(glGetUniformLocation(Program, "hasIrradianceMap"), irradiance.hasIrradianceMap);
-    glUniformMatrix4fv(glGetUniformLocation(Program, "uMaterial.color"), 1, GL_FALSE, materialPBR.color.e);
     glUniform3fv(glGetUniformLocation(Program, "uMaterial.albedo"), 1, materialPBR.albedo.e);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.metallic"), materialPBR.metallic);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.roughness"), materialPBR.roughness);
     glUniform1f(glGetUniformLocation(Program, "uMaterial.ao"), materialPBR.ao);
+    glUniform1f(glGetUniformLocation(Program, "uMaterial.clearCoat"), materialPBR.clearCoat);
+    glUniform1f(glGetUniformLocation(Program, "uMaterial.clearCoatRoughness"), materialPBR.clearCoatRoughness);
 
     // Bind uniform buffer and textures
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, LightsUniformBuffer);
@@ -662,20 +678,19 @@ void demo_pbr::DisplayDebugUI()
         if (ImGui::TreeNodeEx("Scene Settings"))
         {
             ImGui::Checkbox("EnableSceneMultiSphere", &enableSceneMultiSphere);
-            ImGui::Checkbox("IsTextured", &materialPBR.isTextured);
             ImGui::Checkbox("hasIrradianceMap", &irradiance.hasIrradianceMap);
 
             if (!enableSceneMultiSphere)
             {
-
                 if (ImGui::TreeNodeEx("Material"))
                 {
                     ImGui::Checkbox("hasNormal", &materialPBR.hasNormal);
-                    ImGui::ColorEdit4("Color", materialPBR.color.e);
                     ImGui::ColorEdit3("Albedo", materialPBR.albedo.e);
                     ImGui::SliderFloat("Metallic", &materialPBR.metallic, 0.f, 1.f);
                     ImGui::SliderFloat("Roughness", &materialPBR.roughness, 0.f, 1.f);
                     ImGui::SliderFloat("AO", &materialPBR.ao, 0.f, 1.f);
+                    ImGui::SliderFloat("Clear Coat", &materialPBR.clearCoat, 0.f, 1.f);
+                    ImGui::SliderFloat("Clear Coat Roughness", &materialPBR.clearCoatRoughness, 0.f, 1.f);
 
                     ImGui::TreePop();
                 }
