@@ -128,10 +128,7 @@ vec3 getIBLRadianceGGX(float NdotV, vec3 R, float roughness, vec3 F0, float spec
 
     vec3 specularLight = prefilteredColor.rgb;
 
-    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
-    // Roughness dependent fresnel, from Fdez-Aguera
-    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
-    vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 kS = FresnelSchlickRoughness(NdotV, F0, roughness);
     vec3 FssEss = kS * envBRDF.x + envBRDF.y;
 
     return specularWeight * specularLight * FssEss;
@@ -145,10 +142,7 @@ vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo,
 
     vec3 irradiance = texture(irradianceMap, N).rgb;
 
-    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
-    // Roughness dependent fresnel, from Fdez-Aguera
-    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
-    vec3 kS = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 kS = FresnelSchlickRoughness(NdotV, F0, roughness);
     vec3 FssEss = specularWeight * kS * envBRDF.x + envBRDF.y;
 
     // Multiple scattering, from Fdez-Aguera
@@ -167,7 +161,6 @@ void main()
     Pos = TBN * vPos;
     vec3 N = normalize(vNormal);
     vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
-    vec3 R = reflect(-V, N); 
 
     vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
@@ -177,6 +170,8 @@ void main()
 
     if (uMaterial.hasNormalMap)
             N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+
+    vec3 R = reflect(-V, N); 
     
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);

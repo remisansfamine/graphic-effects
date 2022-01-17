@@ -83,7 +83,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 
         {
             // Use vbo from GLCache
-            sphere.MeshBuffer = GLCache.LoadObj("media/Sphere/Sphere.obj", 1.f, &sphere.MeshVertexCount);
+            sphere.MeshBuffer = GLCache.LoadObj("media/Cylinder/Cylinder.obj", 1.f, &sphere.MeshVertexCount);
 
             sphere.MeshDesc.Stride = sizeof(vertex_full);
             sphere.MeshDesc.HasNormal = true;
@@ -125,10 +125,10 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         materialPBR.hasNormal = true;
         irradiance.hasIrradianceMap = true;
     
-        materialPBR.normalMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.albedoMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.metallicMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-        materialPBR.roughnessMap = GLCache.LoadTexture("media/Sphere/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.normalMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     }
 
