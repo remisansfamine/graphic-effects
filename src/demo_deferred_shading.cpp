@@ -54,6 +54,7 @@ uniform sampler2D uEmissiveTexture;
 layout (location = 0) out vec3 oPosition;
 layout (location = 1) out vec3 oNormal;
 layout (location = 2) out vec4 oAlbedo;
+layout (location = 3) out vec4 oEmissive;
 
 void main()
 {
@@ -63,6 +64,9 @@ void main()
 
     // Apply light color
     oAlbedo = texture(uDiffuseTexture, vUV);
+
+    // Apply light color
+    oEmissive = texture(uEmissiveTexture, vUV);
 })GLSL";
 
 static const char* gLightVertexShaderStr = R"GLSL(
@@ -87,6 +91,7 @@ in vec3 vPos;
 uniform sampler2D uPosition;
 uniform sampler2D uNormal;
 uniform sampler2D uAlbedo;
+uniform sampler2D uEmissive;
 
 // Uniforms
 uniform vec3 uViewPosition;
@@ -118,14 +123,18 @@ void main()
     vec3 fragPos = texture(uPosition, vUV).rgb;
     vec3 normal = texture(uNormal, vUV).rgb;
     vec3 albedo = texture(uAlbedo, vUV).rgb;
+    vec3 emissive = texture(uEmissive, vUV).rgb;
 
     // Compute phong shading
     light_shade_result lightResult = get_lights_shading(fragPos, normal);
     
     vec3 diffuseColor  = gDefaultMaterial.diffuse * lightResult.diffuse * albedo;
+    vec3 ambientColor  = gDefaultMaterial.ambient * lightResult.ambient * albedo;
+    vec3 specularColor = gDefaultMaterial.specular * lightResult.specular;
+    vec3 emissiveColor = gDefaultMaterial.emission + emissive;
     
     // Apply light color
-    oColor = vec4(diffuseColor, 1.0);
+    oColor = vec4((ambientColor + diffuseColor + specularColor + emissiveColor), 1.0);
 })GLSL";
 
 demo_deferred_shading::demo_deferred_shading(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug)
@@ -180,6 +189,7 @@ demo_deferred_shading::demo_deferred_shading(const platform_io& IO, GL::cache& G
         glUniform1i(glGetUniformLocation(lightingProgram, "uPosition"), 0);
         glUniform1i(glGetUniformLocation(lightingProgram, "uNormal"), 1);
         glUniform1i(glGetUniformLocation(lightingProgram, "uAlbedo"), 2);
+        glUniform1i(glGetUniformLocation(lightingProgram, "uEmissive"), 3);
     }
 
     // Generate FBO
@@ -212,11 +222,19 @@ demo_deferred_shading::demo_deferred_shading(const platform_io& IO, GL::cache& G
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, albedoTexture, 0);
+
+            // - color + specular color buffer
+            glGenTextures(1, &emissiveTexture);
+            glBindTexture(GL_TEXTURE_2D, emissiveTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, IO.ScreenWidth, IO.ScreenHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, emissiveTexture, 0);
         }
 
         // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-        GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-        glDrawBuffers(3, attachments);
+        GLuint attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+        glDrawBuffers(4, attachments);
 
         // Generate RBO
         {
@@ -271,6 +289,7 @@ demo_deferred_shading::~demo_deferred_shading()
     glDeleteTextures(1, &positionTexture);
     glDeleteTextures(1, &normalTexture);
     glDeleteTextures(1, &albedoTexture);
+    glDeleteTextures(1, &emissiveTexture);
 }
 
 void demo_deferred_shading::Update(const platform_io& IO)
@@ -294,6 +313,8 @@ void demo_deferred_shading::Update(const platform_io& IO)
     glBindTexture(GL_TEXTURE_2D, normalTexture);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, albedoTexture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, emissiveTexture);
 
     mat4 ProjectionMatrix = Mat4::Perspective(Math::ToRadians(60.f), AspectRatio, 0.1f, 100.f);
     mat4 ViewMatrix = CameraGetInverseMatrix(Camera);
@@ -315,6 +336,8 @@ void demo_deferred_shading::Update(const platform_io& IO)
     glBindTexture(GL_TEXTURE_2D, normalTexture);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, albedoTexture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, emissiveTexture);
 
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, TavernScene.LightsUniformBuffer);
 
