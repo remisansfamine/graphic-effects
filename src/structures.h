@@ -80,7 +80,7 @@ namespace RBS
 {
 	struct Mesh
 	{
-		Mesh() {}
+		Mesh();
 		~Mesh() {}
 
 		GL::VertexArrayObject	VAO;

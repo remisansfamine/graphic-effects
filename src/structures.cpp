@@ -1,7 +1,22 @@
 #include "structures.h"
 
+#include "platform.h"
+
 namespace RBS
 {
+    Mesh::Mesh()
+    {
+        // Create a descriptor based on the `struct vertex` format
+        Descriptor.Stride = sizeof(vertex_full);
+        Descriptor.HasUV = true;
+        Descriptor.HasNormal = true;
+        Descriptor.PositionOffset = OFFSETOF(vertex_full, Position);
+        Descriptor.UVOffset = OFFSETOF(vertex_full, UV);
+        Descriptor.NormalOffset = OFFSETOF(vertex_full, Normal);
+        Descriptor.TangentOffset = OFFSETOF(vertex_full, Tangent);
+        Descriptor.BitangentOffset = OFFSETOF(vertex_full, Bitangent);
+    }
+
 	void Mesh::CreateBufferData(const void* data)
 	{
 		VBO.bind();

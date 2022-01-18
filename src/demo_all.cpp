@@ -21,16 +21,6 @@ demo_all::demo_all(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
     {
         // Gen quad
         {
-            // Create a descriptor based on the `struct vertex` format
-            QuadMesh.Descriptor.Stride = sizeof(vertex_full);
-            QuadMesh.Descriptor.HasUV = true;
-            QuadMesh.Descriptor.HasNormal = true;
-            QuadMesh.Descriptor.PositionOffset = OFFSETOF(vertex_full, Position);
-            QuadMesh.Descriptor.UVOffset = OFFSETOF(vertex_full, UV);
-            QuadMesh.Descriptor.NormalOffset = OFFSETOF(vertex_full, Normal);
-            QuadMesh.Descriptor.TangentOffset = OFFSETOF(vertex_full, Tangent);
-            QuadMesh.Descriptor.BitangentOffset = OFFSETOF(vertex_full, Bitangent);
-
             // Create a cube in RAM
             vertex_full Quad[6];
             QuadMesh.VertexCount = 6;
@@ -44,18 +34,7 @@ demo_all::demo_all(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
 
         // Gen Backpack
         {
-            // Create a descriptor based on the `struct vertex` format
-            BackpackMesh.Descriptor.Stride = sizeof(vertex_full);
-            BackpackMesh.Descriptor.HasUV = true;
-            BackpackMesh.Descriptor.HasNormal = true;
-            BackpackMesh.Descriptor.PositionOffset = OFFSETOF(vertex_full, Position);
-            BackpackMesh.Descriptor.UVOffset = OFFSETOF(vertex_full, UV);
-            BackpackMesh.Descriptor.NormalOffset = OFFSETOF(vertex_full, Normal);
-            BackpackMesh.Descriptor.TangentOffset = OFFSETOF(vertex_full, Tangent);
-            BackpackMesh.Descriptor.BitangentOffset = OFFSETOF(vertex_full, Bitangent);
-
             BackpackMesh.VBO.ID = GLCache.LoadObj("media/backpack.obj", 1.f, &BackpackMesh.VertexCount);
-
             BackpackMesh.CreateVertexArray();
         }
     }
@@ -75,8 +54,7 @@ demo_all::demo_all(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
     }
 
     SetupLight();
-    // Lightning
-    // Normal map
+    // Normal map (vertex shader position TBN)
     // Hdr
     // Skybox
     // Shadow map
@@ -110,11 +88,11 @@ void demo_all::SetupLight()
     // Sun light
     this->Lights[0] = DefaultLight;
     this->Lights[0].Position = { 1.f, 3.f, 1.f, 0.f }; // Directional light
-    this->Lights[0].Diffuse = Color::RGB(0x374D58);
+    this->Lights[0].Diffuse = Color::RGB(0xFFFFFF);
 
     // Candles
     GL::light CandleLight = DefaultLight;
-    CandleLight.Diffuse = Color::RGB(0xFFB400);
+    CandleLight.Diffuse = Color::RGB(0xEEEE00);
     CandleLight.Specular = CandleLight.Diffuse;
     CandleLight.Attenuation = { 0.f, 0.f, 2.0f };
 
@@ -155,7 +133,7 @@ void demo_all::Update(const platform_io& IO)
 
     mat4 ProjectionMatrix = Mat4::Perspective(Math::ToRadians(60.f), AspectRatio, 0.1f, 1000.f);
     mat4 ViewMatrix = CameraGetInverseMatrix(Camera);
-    mat4 ModelMatrix = Mat4::Translate({ 0.f, 0.f, -5.f }) * Mat4::Scale({ 10.f, 10.f, 10.f });
+    mat4 ModelMatrix = Mat4::Translate({ 0.f, 0.f, -5.f });
 
     // Setup GL state
     glEnable(GL_DEPTH_TEST);
@@ -220,7 +198,7 @@ void demo_all::DisplayDebugUI()
         
         if (ImGui::TreeNodeEx("Lights"))
         {
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < Lights.size(); ++i)
             {
                 if (ImGui::TreeNode(&Lights[i], "Light[%d]", i))
                 {
