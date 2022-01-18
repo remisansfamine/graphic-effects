@@ -70,7 +70,6 @@ void demo_pbr::SetupLight()
         glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
         glBufferData(GL_UNIFORM_BUFFER, Lights.size() * sizeof(GL::light), Lights.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
     }
 }
 
@@ -207,6 +206,7 @@ void demo_pbr::SetupCube(GL::cache& GLCache)
     glGenVertexArrays(1, &cube.VAO);
     glBindVertexArray(cube.VAO);
 
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(Descriptor.PositionOffset));
 
@@ -528,6 +528,9 @@ void demo_pbr::Update(const platform_io& IO)
 
     Camera = CameraUpdateFreefly(Camera, IO.CameraInputs);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     // Clear screen
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -559,6 +562,9 @@ void demo_pbr::Update(const platform_io& IO)
         RenderSphere(ProjectionMatrix, ViewMatrix, ModelMatrix);
     }
 
+    glCullFace(GL_FRONT);
+
+
     //Render Skybox
     {
         glDepthFunc(GL_LEQUAL);
@@ -576,6 +582,9 @@ void demo_pbr::Update(const platform_io& IO)
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    glCullFace(GL_BACK);
+
     // Display debug UI
     this->DisplayDebugUI();
 }

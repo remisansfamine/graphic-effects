@@ -54,7 +54,7 @@ light gDefaultLight = light(
 
 // Default material
 uniform material gDefaultMaterial = material(
-    vec3(0.2, 0.2, 0.2),
+    vec3(0, 0, 0),
     vec3(0.8, 0.8, 0.8),
     vec3(1.0, 1.0, 1.0),
     vec3(0.0, 0.0, 0.0),
@@ -159,7 +159,7 @@ GLuint GL::CompileShaderEx(GLenum ShaderType, int ShaderStrsCount, const char** 
 
 	std::vector<const char*> Sources;
 	Sources.reserve(4);
-	Sources.push_back("#version 330 core\n");
+	//Sources.push_back("#version 330 core\n");
 
 	if (InjectLightShading)
 	{

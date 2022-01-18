@@ -1,4 +1,4 @@
-//#version 330 core
+#version 330 core
 
 out vec2 oColor;
 in vec2 vUV;

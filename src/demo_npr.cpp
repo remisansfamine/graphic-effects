@@ -193,7 +193,7 @@ demo_npr::demo_npr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
         {
-            //glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+            glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
 
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Descriptor.Stride, (void*)(Descriptor.PositionOffset));
@@ -207,7 +207,7 @@ demo_npr::demo_npr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
             glEnableVertexAttribArray(0);
         }
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     // Gen and bind palette texture
@@ -285,12 +285,14 @@ demo_npr::demo_npr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
         // Create a vertex array
         glGenVertexArrays(1, &QuadVAO);
         glBindVertexArray(QuadVAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, QuadVBO);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, Position));
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, UV));
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 }

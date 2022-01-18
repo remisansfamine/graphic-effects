@@ -8,6 +8,8 @@
 using namespace GL;
 
 static const char* gWireframeVertexShaderStr = R"GLSL(
+#version 330 core
+
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aBC;
 uniform mat4 uModelViewProj;
@@ -20,6 +22,8 @@ void main()
 })GLSL";
 
 static const char* gWireframeFragmentShaderStr = R"GLSL(
+#version 330 core
+
 in vec3 vBC;
 out vec4 oColor;
 uniform float uLineWidth = 1.25;

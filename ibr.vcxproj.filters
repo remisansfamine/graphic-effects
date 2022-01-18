@@ -31,8 +31,17 @@
     <Filter Include="Header Files\ext\imgui">
       <UniqueIdentifier>{12284382-b2a3-4841-8a60-e58239410ed7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\shaders">
+    <Filter Include="Source Files\helpers">
+      <UniqueIdentifier>{92aa22eb-e2ec-455d-bad8-9987896fb6f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\helpers">
+      <UniqueIdentifier>{e7a2f4f1-899e-4a65-b898-f320f6a60fd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{4349259f-d482-4259-b985-ad2cd106fa03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\ShadersAll">
+      <UniqueIdentifier>{4152e67a-4e94-48f8-b62f-57d5658a14ef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,9 +49,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\opengl_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\demo_base.cpp">
@@ -81,12 +87,6 @@
     <ClCompile Include="externals\glad.c">
       <Filter>Source Files\ext</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl_helpers_wireframe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\opengl_helpers_cache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\tavern_scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -105,24 +105,45 @@
     <ClCompile Include="src\demo_pbr.cpp">
       <Filter>Source Files\demo</Filter>
     </ClCompile>
+    <ClCompile Include="src\demo_all.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_deferred_shading.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_instancing.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_npr.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_picking.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo_shadowMap.cpp">
+      <Filter>Source Files\demo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl_helpers_wireframe.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl_helpers_cache.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl_helpers.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\structures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\demo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\maths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\maths_extension.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl_headers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\platform.h">
@@ -170,12 +191,6 @@
     <ClInclude Include="include\tiny_obj_loader.h">
       <Filter>Header Files\ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl_helpers_wireframe.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl_helpers_cache.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\tavern_scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -191,58 +206,100 @@
     <ClInclude Include="src\demo_skybox.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
-    <ClInclude Include="src\demo_pg_billboard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\demo_pg_billboard2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\demo_pg_postprocess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\demo_pg_skybox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\demo_normal_map.h">
       <Filter>Header Files\demo</Filter>
     </ClInclude>
+    <ClInclude Include="src\demo_all.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_deferred_shading.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_instancing.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_npr.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
     <ClInclude Include="src\demo_pbr.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_billboard2.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_postprocess.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_pg_skybox.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_picking.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\demo_shadowMap.h">
+      <Filter>Header Files\demo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl_helpers.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl_headers.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl_helpers_cache.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl_helpers_wireframe.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\structures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\ShaderPBR.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderPBR.vert">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\SphereMapShader.vert">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\SphereMapShader.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\SkyboxShader.vert">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\SkyboxShader.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderIrradianceMap.vert">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderIrradianceMap.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderPrefilterMap.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderBRDF.vert">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\ShaderBRDF.frag">
-      <Filter>Header Files\shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="src\uber_shader.frag">
+      <Filter>Resource Files\ShadersAll</Filter>
+    </None>
+    <None Include="src\uber_shader.vert">
+      <Filter>Resource Files\ShadersAll</Filter>
     </None>
   </ItemGroup>
 </Project>

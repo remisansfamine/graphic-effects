@@ -97,10 +97,10 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
         glGenVertexArrays(1, &Skybox.VAO);
         glBindVertexArray(Skybox.VAO);
 
+        glBindBuffer(GL_ARRAY_BUFFER, Skybox.VBO);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(Descriptor.PositionOffset));
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 
@@ -111,6 +111,7 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
         vertex_descriptor Descriptor = {};
         Descriptor.Stride = sizeof(vertex_full);
         Descriptor.HasUV = true;
+        Descriptor.HasNormal = true;
         Descriptor.PositionOffset = OFFSETOF(vertex_full, Position);
         Descriptor.NormalOffset = OFFSETOF(vertex_full, Normal);
         Descriptor.UVOffset = OFFSETOF(vertex_full, UV);
@@ -122,12 +123,13 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
 
+        glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_full), (void*)(Descriptor.PositionOffset));
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_full), (void*)(Descriptor.NormalOffset));
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 }
@@ -137,15 +139,11 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
     // Cleanup GL
     if (Skybox.ID)
         glDeleteTextures(1, &Skybox.ID);
-    if (Skybox.VBO)
-        glDeleteBuffers(1, &Skybox.VBO);
     if (Skybox.VAO)
         glDeleteVertexArrays(1, &Skybox.VAO);
     if (Skybox.Program)
         glDeleteProgram(Skybox.Program);
 
-    if (VertexBuffer)
-        glDeleteBuffers(1, &VertexBuffer);
     if (VAO)
         glDeleteVertexArrays(1, &VAO);
     if (Program)
@@ -206,6 +204,9 @@ void demo_skybox::Update(const platform_io& IO)
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
     glDepthMask(0);
 
     const float AspectRatio = (float)IO.WindowWidth / (float)IO.WindowHeight;
@@ -239,6 +240,8 @@ void demo_skybox::Update(const platform_io& IO)
 
 
     glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
+
     // Draw reflect/refract box
     glUseProgram(Program);
 
@@ -263,6 +266,7 @@ void demo_skybox::Update(const platform_io& IO)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     glDisable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
     
     //DemoBase.RenderTavern(ProjectionMatrix, CameraGetInverseMatrix(Camera), Mat4::Identity());
 

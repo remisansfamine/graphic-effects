@@ -121,7 +121,6 @@ demo_instancing::demo_instancing(GL::cache& GLCache, GL::debug& GLDebug)
                 glEnableVertexAttribArray(5);
                 glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)(3 * sizeof(v4)));
             }
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             glVertexAttribDivisor(2, 1);
             glVertexAttribDivisor(3, 1);
@@ -129,6 +128,7 @@ demo_instancing::demo_instancing(GL::cache& GLCache, GL::debug& GLDebug)
             glVertexAttribDivisor(5, 1);
         }
         glBindVertexArray(0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     // Gen texture
@@ -162,13 +162,7 @@ void demo_instancing::Update(const platform_io& IO)
     mat4 rotate = Mat4::RotateX(IO.DeltaTime);
 
     for (int i = 0; i < offsets.size(); i++)
-    {
-        //if (i == 25000 || i == 22000 || i == 1100 || i == 10000 || i == 5 ||
-            //i == 12 || i == 30 || i == 45 || i == 150 || i == 26)
-            //continue;
-
         offsets[i] *= rotate;
-    }
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, offsets.size() * sizeof(mat4), offsets.data());
@@ -205,5 +199,5 @@ void demo_instancing::Update(const platform_io& IO)
     glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, offsets.size());
     glBindVertexArray(0);
 
-    DisplayDebugUI();
+    //DisplayDebugUI();
 }

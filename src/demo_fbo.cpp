@@ -284,12 +284,13 @@ demo_fbo::demo_fbo(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
         // Create a vertex array
         glGenVertexArrays(1, &PostProcessPassData.VAO);
         glBindVertexArray(PostProcessPassData.VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, PostProcessPassData.VertexBuffer);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, Position));
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)OFFSETOF(vertex, UV));
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 }
@@ -365,6 +366,9 @@ void demo_fbo::Update(const platform_io& IO)
     glUniform1f(glGetUniformLocation(PostProcessPassData.Program, "offset"), 1.f / 300.f);
 
     DrawQuad(PostProcessPassData.Program, Mat4::Identity());
+
+    glBindVertexArray(0);
+    glUseProgram(0);
 
     DisplayDebugUI();
 }

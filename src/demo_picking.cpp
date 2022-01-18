@@ -167,7 +167,7 @@ demo_picking::demo_picking(const platform_io& IO, GL::cache& GLCache, GL::debug&
         glGenVertexArrays(1, &modelBasic.VAO);
         glBindVertexArray(modelBasic.VAO);
         {
-            //glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+            glBindBuffer(GL_ARRAY_BUFFER, modelBasic.VBO);
 
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Descriptor.Stride, (void*)(Descriptor.PositionOffset));
@@ -181,7 +181,7 @@ demo_picking::demo_picking(const platform_io& IO, GL::cache& GLCache, GL::debug&
             glEnableVertexAttribArray(0);
         }
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // Generate FBO for outline
         {
@@ -232,12 +232,11 @@ demo_picking::~demo_picking()
     // Cleanup GL
     for (auto& model : models)
     {
-        glDeleteBuffers(1, &model.VBO);
+        //glDeleteBuffers(1, &model.VBO);
         glDeleteVertexArrays(1, &model.VAO);
     }
 
     {
-        glDeleteFramebuffers(1, &Picking.FBO);
         glDeleteFramebuffers(1, &Picking.FBO);
         glDeleteTextures(1, &Picking.Texture);
         glDeleteProgram(Picking.Program);

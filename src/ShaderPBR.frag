@@ -1,4 +1,4 @@
-//#version 330 core
+#version 330 core
 
 // Varyings
 in vec2 vUV;

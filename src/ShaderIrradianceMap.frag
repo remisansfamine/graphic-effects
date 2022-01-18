@@ -1,4 +1,5 @@
-//#version 330 core
+#version 330 core
+
 out vec4 oColor;
 in vec3 vPos;
 

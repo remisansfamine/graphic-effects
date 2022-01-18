@@ -21,6 +21,7 @@
 #include "pg.h"
 
 #include "demo_minimal.h"
+#include "demo_all.h"
 #include "demo_deferred_shading.h"
 #include "demo_picking.h"
 #include "demo_fbo.h"
@@ -252,23 +253,21 @@ int main(int argc, char* argv[])
         GLFWPlatformIOUpdate(App.Window, &App.IO);
         
         int DemoId = 0; // Change this to start with another demo
-        std::unique_ptr<demo> Demos[] = 
+        std::unique_ptr<demo> Demos[] =
         {
+            //std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_pbr>(App.IO, GLCache, GLDebug),
-            std::make_unique<demo_shadowMap>(GLCache, GLDebug),
-            std::make_unique<demo_skybox>(GLCache, GLDebug),
-            std::make_unique<demo_shadowMap>(GLCache, GLDebug),
-            std::make_unique<demo_normal_map>(GLCache, GLDebug),
-            std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
-            std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
-            std::make_unique<demo_base>(GLCache, GLDebug),
-            std::make_unique<demo_minimal>(),
-            std::make_unique<demo_pg_skybox>(GLCache, GLDebug),
-            std::make_unique<demo_pg_billboard>(GLCache, GLDebug),
-            std::make_unique<demo_pg_billboard2>(),
-            std::make_unique<demo_pg_postprocess>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_pg_fbx>(GLDebug.Wireframe, GLCache),
-            // TODO(demo): Add other demos here
+            std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_skybox>(GLCache, GLDebug),
+            //std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_npr>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_deferred_shading>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_instancing>(GLCache, GLDebug),
+            //std::make_unique<demo_shadowMap>(GLCache, GLDebug),
+            //std::make_unique<demo_normal_map>(GLCache, GLDebug),
+            //std::make_unique<demo_picking>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
+            //std::make_unique<demo_base>(GLCache, GLDebug),
         };
 
         // Main loop

@@ -338,11 +338,15 @@ void demo_deferred_shading::Update(const platform_io& IO)
     glBindTexture(GL_TEXTURE_2D, albedoTexture);
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, emissiveTexture);
+    glActiveTexture(GL_TEXTURE0);
 
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, TavernScene.LightsUniformBuffer);
 
     glBindVertexArray(quad.VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    glUseProgram(0);
 
     // Display debug UI
     this->DisplayDebugUI();

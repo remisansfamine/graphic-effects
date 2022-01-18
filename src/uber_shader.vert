@@ -21,17 +21,18 @@ out mat3 vTBN;
 
 void main()
 {
-   vec3 T = normalize(mat3(uModelNormalMatrix) * aTangent);
-   vec3 N = normalize(mat3(uModelNormalMatrix) * aNormal);
-   T = normalize(T - dot(T, N) * N);
-   vec3 B = cross(N, T);
-   
-   vTBN = transpose(mat3(T, B, N));
+    vec4 pos4 = uModel * vec4(aPosition, 1.0);
+    vPos = vec3(pos4);
+    vUV = aUV;
 
-   vUV = aUV;
-   vec4 pos4 = (uModel * vec4(aPosition, 1.0));
-   vPos = pos4.xyz;
-   vNormal = (uModelNormalMatrix * vec4(aNormal, 0.0)).xyz;
+    vec3 T = normalize(mat3(uModelNormalMatrix) * aTangent);
+    vec3 N = normalize(mat3(uModelNormalMatrix) * aNormal);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
+    
+    vTBN = transpose(mat3(T, B, N));
 
-   gl_Position = uProjection * uView * pos4;
+    vNormal = (uModelNormalMatrix * vec4(aNormal, 0.0)).xyz;
+
+    gl_Position = uProjection * uView * pos4;
 }

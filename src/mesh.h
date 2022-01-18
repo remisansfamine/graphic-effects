@@ -7,22 +7,15 @@
 // Descriptor for interleaved vertex formats
 struct vertex_descriptor
 {
-	int Stride;
-	int PositionOffset;
-	bool HasNormal;
-	int NormalOffset;
-	bool HasUV;
-	int UVOffset;
+	int Stride			= 0;
+	int PositionOffset	= 0;
+	bool HasNormal		= false;
+	int NormalOffset	= 0;
+	bool HasUV			= false;
+	int UVOffset		= 0;
 
-	int TangentOffset;
-	int BitangentOffset;
-};
-
-struct vertex_full_simple
-{
-	v3 Position;
-	v3 Normal;
-	v2 UV;
+	int TangentOffset	= 0;
+	int BitangentOffset = 0;
 };
 
 struct vertex_full
