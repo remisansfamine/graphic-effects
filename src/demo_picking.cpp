@@ -57,6 +57,7 @@ in vec3 vNormal;
 // Uniforms
 uniform mat4 uProjection;
 uniform vec3 uViewPosition;
+uniform vec3 uColor;
 
 uniform sampler2D uDiffuseTexture;
 
@@ -93,7 +94,7 @@ void main()
     vec3 emissiveColor = gDefaultMaterial.emission;
     
     // Apply light color
-    oColor = vec4((ambientColor + diffuseColor + specularColor + emissiveColor), 1.0);
+    oColor = vec4((ambientColor + diffuseColor + specularColor + emissiveColor), 1.0) * vec4(uColor, 1.0);
 })GLSL";
 
 static const char* gVertexShaderPickStr = R"GLSL(
@@ -339,15 +340,18 @@ void demo_picking::Update(const platform_io& IO)
     glUniform3fv(glGetUniformLocation(Program, "uViewPosition"), 1, Camera.Position.e);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uView"), 1, GL_FALSE, ViewMatrix.e);
 
+    v3 color = { 1.f, 1.f, 1.f };
     for (int i = 0; i < models.size(); i++)
     {
+
         if (Picking.PickedID != -1 && i == Picking.PickedID)
-            continue;
+            color = { 1.0, 0.0, 0.0 };
 
         mat4 ModelMatrix = Mat4::Translate(models[i].position);
         mat4 NormalMatrix = Mat4::Transpose(Mat4::Inverse(ModelMatrix));
 
         // Bind uniform buffer and textures
+        glUniform3fv(glGetUniformLocation(Program, "uColor"), 1, color.e);
         glUniformMatrix4fv(glGetUniformLocation(Program, "uModel"), 1, GL_FALSE, ModelMatrix.e);
         glUniformMatrix4fv(glGetUniformLocation(Program, "uModelNormalMatrix"), 1, GL_FALSE, NormalMatrix.e);
 
@@ -359,6 +363,8 @@ void demo_picking::Update(const platform_io& IO)
         // Draw mesh
         glBindVertexArray(models[i].VAO);
         glDrawArrays(GL_TRIANGLES, 0, models[i].VertexCount);
+
+        color = { 1.f, 1.f, 1.f };
     }
 
     //RenderPickingTexture(ProjectionMatrix * ViewMatrix);
@@ -378,8 +384,8 @@ void demo_picking::Update(const platform_io& IO)
         glReadPixels((GLint)mousePos.x, IO.WindowHeight - (GLint)mousePos.y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
         int pickedID = data[0] + data[1] * 256 + data[2] * 256 * 256;
-        std::cout << "ID " << pickedID << std::endl;
-        std::cout << "Mouse Pos : X = " << mousePos.x << " , Y = " << mousePos.y << std::endl;
+        //std::cout << "ID " << pickedID << std::endl;
+        //std::cout << "Mouse Pos : X = " << mousePos.x << " , Y = " << mousePos.y << std::endl;
 
         Picking.PickedID = pickedID - 1;
 
