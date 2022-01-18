@@ -26,6 +26,7 @@
     <ClCompile Include="src\tavern_scene.cpp" />
     <ClCompile Include="src\demo_instancing.cpp" />
     <ClCompile Include="src\demo_npr.cpp" />
+    <ClCompile Include="src\demo_deferred_shading.cpp" />
     <ClCompile Include="src\demo_picking.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +66,7 @@
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\demo_instancing.h" />
     <ClInclude Include="src\demo_npr.h" />
+    <ClInclude Include="src\demo_deferred_shading.h" />
     <ClInclude Include="src\demo_picking.h" />
   </ItemGroup>
 </Project>
