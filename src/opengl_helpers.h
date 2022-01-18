@@ -59,6 +59,8 @@ namespace GL
     GLuint CompileShader(GLenum ShaderType, const char* ShaderStr, bool InjectLightShading = false);
     GLuint CompileShaderEx(GLenum ShaderType, int ShaderStrsCount, const char** ShaderStrs, bool InjectLightShading = false);
     GLuint CreateProgram(const char* VSString, const char* FSString, bool InjectLightShading = false);
+    GLuint CreateProgramFromFiles(const std::string& VSPath, const std::string& FSPath, bool InjectLightShading = false);
+    std::string LoadShaderFromFile(const std::string& path);
     GLuint CreateProgramEx(int VSStringsCount, const char** VSStrings, int FSStringCount, const char** FSString, bool InjectLightShading = false);
     const char* GetShaderStructsDefinitions();
     void UploadTexture(const char* Filename, int ImageFlags = 0, int* WidthOut = nullptr, int* HeightOut = nullptr);

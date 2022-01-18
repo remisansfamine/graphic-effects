@@ -83,7 +83,12 @@ namespace Vec3
 
     inline v3 Normalize(v3 V)
     {
-        float InvLen = 1.f / Vec3::Length(V);
+        float length = Vec3::Length(V);
+
+        if (length == 0.f)
+            return { 0.f, 0.f, 0.f };
+
+        float InvLen = 1.f / length;
         return V * InvLen;
     }
 
@@ -343,6 +348,23 @@ namespace Mat4
             0.f,                             0.f,                             -(Far * Near * 2.f) / (Far - Near), 0.f
         };
     }
+
+    inline mat4 Orthographic(float left, float right, float bottom, float top, float near, float far)
+    {
+        // Pre-compute divisions
+        float OneOverTopMinusBottom = 1.f / (top - bottom);
+        float OneOverFarMinusNear = 1.f / (far - near);
+        float OneOverRightMinusLeft = 1.f / (right - left);
+
+        mat4 ortho = {
+            2.f * OneOverRightMinusLeft, 0.f, 0.f, -(right + left) * OneOverRightMinusLeft,
+            0.f, 2.f * OneOverTopMinusBottom, 0.f, -(top + bottom) * OneOverTopMinusBottom,
+            0.f, 0.f, -2.f * OneOverFarMinusNear, -(far + near) * OneOverFarMinusNear,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+        return ortho;
+    }
     
     inline mat4 Perspective(float FovY, float Aspect, float Near, float Far)
     {
@@ -351,11 +373,11 @@ namespace Mat4
         return Mat4::Frustum(-Right, Right, -Top, Top, Near, Far);
     }
 
-    inline mat4 LookAt(v3 Eye, v3 At, v3 Up)
+    inline mat4 LookAt(const v3& Eye, const v3& At = { 0.f, 0.f, 0.f }, const v3& Up = { 0.f, 1.f, 0.f })
     {
         v3 ZAxis = Vec3::Normalize(At - Eye);
-        v3 XAxis = Vec3::Normalize(Vec3::Cross(ZAxis, Up));
-        v3 YAxis = Vec3::Cross(XAxis, ZAxis);
+        v3 XAxis = Vec3::Normalize(Vec3::Cross(Up, ZAxis)); //Vec3::Normalize(Vec3::Cross(ZAxis, Up));
+        v3 YAxis = Vec3::Cross(ZAxis, XAxis); //Vec3::Cross(XAxis, ZAxis);
 
         return {
             XAxis.x, YAxis.x, -ZAxis.x, 0.f,

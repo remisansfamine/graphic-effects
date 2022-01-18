@@ -27,7 +27,6 @@ public:
     // ImGui debug function to edit lights
     void InspectLights();
 
-private:
     // Lights data
     std::vector<GL::light> Lights;
 };

@@ -18,6 +18,13 @@ struct vertex_descriptor
 	int BitangentOffset;
 };
 
+struct vertex_full_simple
+{
+	v3 Position;
+	v3 Normal;
+	v2 UV;
+};
+
 struct vertex_full
 {
 	v3 Position;

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <map>
 
 #include <stb_image.h>
@@ -53,7 +54,7 @@ light gDefaultLight = light(
 
 // Default material
 uniform material gDefaultMaterial = material(
-    vec3(0.0, 0.0, 0.0),
+    vec3(0.2, 0.2, 0.2),
     vec3(0.8, 0.8, 0.8),
     vec3(1.0, 1.0, 1.0),
     vec3(0.0, 0.0, 0.0),
@@ -188,6 +189,18 @@ GLuint GL::CompileShader(GLenum ShaderType, const char* ShaderStr, bool InjectLi
 	return GL::CompileShaderEx(ShaderType, 1, &ShaderStr, InjectLightShading);
 }
 
+std::string GL::LoadShaderFromFile(const std::string& path)
+{
+	std::ifstream ifs(path);
+
+	// Send the code to OpenGL as a char*
+	std::string string_code;
+	string_code.assign((std::istreambuf_iterator<char>(ifs)),
+		(std::istreambuf_iterator<char>()));
+
+	return string_code;
+}
+
 GLuint GL::CreateProgramEx(int VSStringsCount, const char** VSStrings, int FSStringsCount, const char** FSStrings, bool InjectLightShading)
 {
 	GLuint Program = glCreateProgram();
@@ -204,6 +217,16 @@ GLuint GL::CreateProgramEx(int VSStringsCount, const char** VSStrings, int FSStr
 	glDeleteShader(FragmentShader);
 
 	return Program;
+}
+
+GLuint GL::CreateProgramFromFiles(const std::string& VSPath, const std::string& FSPath, bool InjectLightShading)
+{
+	const std::string VSString = LoadShaderFromFile(VSPath);
+	const std::string FSString = LoadShaderFromFile(FSPath);
+	const char* CVSString = VSString.c_str();
+	const char* CFSString = FSString.c_str();
+
+	return GL::CreateProgramEx(1, &CVSString, 1, &CFSString, InjectLightShading);
 }
 
 GLuint GL::CreateProgram(const char* VSString, const char* FSString, bool InjectLightShading)
