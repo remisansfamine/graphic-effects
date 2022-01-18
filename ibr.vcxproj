@@ -169,6 +169,7 @@
     <ClCompile Include="src\demo_picking.cpp" />
     <ClCompile Include="src\demo_shadowMap.cpp" />
     <ClCompile Include="src\demo_normal_map.cpp" />
+    <ClCompile Include="src\demo_pbr.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="src\demo_minimal.h" />
     <ClInclude Include="src\demo_fbo.h" />
     <ClInclude Include="src\demo_normal_map.h" />
+    <ClInclude Include="src\demo_pbr.h" />
     <ClInclude Include="src\demo_npr.h" />
     <ClInclude Include="src\demo_pg_billboard.h" />
     <ClInclude Include="src\demo_pg_billboard2.h" />
@@ -216,6 +218,19 @@
     <ClInclude Include="src\platform.h" />
     <ClInclude Include="src\tavern_scene.h" />
     <ClInclude Include="src\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\ShaderBRDF.frag" />
+    <None Include="src\ShaderBRDF.vert" />
+    <None Include="src\ShaderIrradianceMap.frag" />
+    <None Include="src\ShaderIrradianceMap.vert" />
+    <None Include="src\ShaderPBR.frag" />
+    <None Include="src\ShaderPBR.vert" />
+    <None Include="src\ShaderPrefilterMap.frag" />
+    <None Include="src\SkyboxShader.frag" />
+    <None Include="src\SkyboxShader.vert" />
+    <None Include="src\SphereMapShader.frag" />
+    <None Include="src\SphereMapShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
