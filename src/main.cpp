@@ -255,6 +255,7 @@ int main(int argc, char* argv[])
         std::unique_ptr<demo> Demos[] = 
         {
             std::make_unique<demo_pbr>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_shadowMap>(GLCache, GLDebug),
             std::make_unique<demo_skybox>(GLCache, GLDebug),
             std::make_unique<demo_shadowMap>(GLCache, GLDebug),
             std::make_unique<demo_normal_map>(GLCache, GLDebug),
