@@ -275,7 +275,6 @@ void main()
     Pos = TBN * vPos;
     vec3 N = normalize(vNormal);
     vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
-    float NdotV = max(dot(N, V), 0.0);
 
     vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
@@ -300,6 +299,7 @@ void main()
     vec3 ambient;
     if (hasIrradianceMap)
     {
+        float NdotV = max(dot(N, V), 0.0);
         vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0, specularWeight);
         vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0, specularWeight);
         ambient = (specular + diffuse) * ao;
