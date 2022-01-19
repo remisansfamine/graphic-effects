@@ -213,6 +213,15 @@ GLuint GL::CreateProgramEx(int VSStringsCount, const char** VSStrings, int FSStr
 
 	glLinkProgram(Program);
 
+	GLint LinkStatus;
+	glGetProgramiv(Program, GL_LINK_STATUS, &LinkStatus);
+	if (LinkStatus == GL_FALSE)
+	{
+		char Infolog[1024];
+		glGetProgramInfoLog(Program, ARRAY_SIZE(Infolog), nullptr, Infolog);
+		fprintf(stderr, "Program link error: %s\n", Infolog);
+	}
+
 	glDeleteShader(VertexShader);
 	glDeleteShader(FragmentShader);
 

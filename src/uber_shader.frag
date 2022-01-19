@@ -1,7 +1,5 @@
 #version 330 core
 
-#define LIGHT_COUNT 6
-
 // Light structure
 struct light
 {
@@ -11,6 +9,26 @@ struct light
     vec3 diffuse;
     vec3 specular;
     vec3 attenuation;
+};
+
+#define LIGHT_COUNT 6
+
+in VS_OUT
+{
+    // Varyings
+    vec2 UV;
+    vec3 fragPos;      // Vertex position in view-space
+    vec3 TSFragPos;      // Vertex position in tangent-space
+    vec3 TSViewPos;      // View direction in tangent-space
+    vec3 normal;        // Vertex normal in view-space
+    mat3 TBN;
+    vec3 TSLightsPos[LIGHT_COUNT];
+} fs_in;
+
+// Uniform blocks
+layout(std140) uniform uLightBlock
+{
+	light uLight[LIGHT_COUNT];
 };
 
 struct light_shade_result
@@ -85,24 +103,9 @@ light_shade_result light_shade(light light, float shininess, vec3 eyePosition, v
 	return r;
 }
 
-// Varyings
-in vec2 vUV;
-in vec3 vPos;
-in vec3 vNormal;
-in mat3 vTBN;
-
 // Uniforms
-uniform mat4 uProjection;
-uniform vec3 uViewPosition;
-
 uniform sampler2D uDiffuseTexture;
 uniform sampler2D uNormalMap;
-
-// Uniform blocks
-layout(std140) uniform uLightBlock
-{
-	light uLight[LIGHT_COUNT];
-};
 
 // Shader outputs
 out vec4 oColor;
@@ -113,9 +116,9 @@ light_shade_result get_lights_shading(in vec3 normal)
 	for (int i = 0; i < LIGHT_COUNT; ++i)
     {
         light currLight = uLight[i];
-        currLight.position = vec4(vTBN * currLight.position.xyz, currLight.position.w);
+        currLight.position.xyz = fs_in.TSLightsPos[i].xyz;
 
-        light_shade_result currLightResult = light_shade(currLight, gDefaultMaterial.shininess, vTBN * uViewPosition, vTBN * vPos, normal);
+        light_shade_result currLightResult = light_shade(currLight, gDefaultMaterial.shininess, fs_in.TSViewPos, fs_in.TSFragPos, normal);
         lightResult.ambient  += currLightResult.ambient;
         lightResult.diffuse  += currLightResult.diffuse;
         lightResult.specular += currLightResult.specular;
@@ -125,13 +128,13 @@ light_shade_result get_lights_shading(in vec3 normal)
 
 void main()
 {
-    vec3 normal = texture(uNormalMap, vUV).rgb;
+    vec3 normal = texture(uNormalMap, fs_in.UV).rgb;
     normal = normalize(normal * 2.0 - 1.0);
 
     // Compute phong shading
     light_shade_result lightResult = get_lights_shading(normal);
     
-    vec3 albedo = texture(uDiffuseTexture, vUV).rgb;
+    vec3 albedo = texture(uDiffuseTexture, fs_in.UV).rgb;
 
     vec3 diffuseColor  = gDefaultMaterial.diffuse * lightResult.diffuse * albedo;
     vec3 ambientColor  = gDefaultMaterial.ambient * lightResult.ambient * albedo;
