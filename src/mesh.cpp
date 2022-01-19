@@ -4,6 +4,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include <map>
 
 #include <tiny_obj_loader.h>
 
@@ -268,9 +269,121 @@ void Mesh::AddNormalMapParameters(std::vector<vertex_full>& Mesh)
     AddNormalMapParameters(Mesh.data(), Mesh.size());
 }
 
+int AddToKnowVertices(std::vector<v3>& vertices, const v3& v)
+{
+    int i = 0;
+    for (const v3& current : vertices)
+    {
+        if (current.x == v.x && current.y == v.y && current.z == v.z)
+            return i;
+
+        i++;
+    }
+
+    vertices.push_back(v);
+    return (int)vertices.size() - 1;
+}
+
 void Mesh::AddNormalMapParameters(vertex_full* Mesh, int VertexCount)
 {
+    /*for (size_t i = 0; i < VertexCount; i += 3)
+    {
+        vertex_full& vert1 = Mesh[i + 0];
+        vertex_full& vert2 = Mesh[i + 1];
+        vertex_full& vert3 = Mesh[i + 2];
+
+        float uva, uvb, uvc, uvd, uvk;
+
+        uva = vert2.UV.x - vert1.UV.x;
+        uvb = vert3.UV.x - vert1.UV.x;
+
+        uvc = vert2.UV.y - vert1.UV.y;
+        uvd = vert3.UV.y - vert1.UV.y;
+
+        uvk = uvb * uvc - uva * uvd;
+
+        v3 v1 = vert2.Position - vert1.Position;
+        v3 v2 = vert3.Position - vert1.Position;
+
+        v3 tangent, bitangent;
+
+        if (uvk != 0)
+        {
+            tangent = (uvc * v2 - uvd * v1) / uvk;
+            bitangent = (uva * v2 - uvb * v1) / uvk;
+        }
+        else
+        {
+            if (uva != 0)
+                tangent = v1 / uva;
+            else if (uvb != 0)
+                tangent = v2 / uvb;
+            else
+                tangent = { 0.0f, 0.0f, 0.0f };
+
+            if (uvc != 0)
+                bitangent = v1 / uvc;
+            else if (uvd != 0)
+                bitangent = v2 / uvd;
+            else
+                bitangent = { 0.0f, 0.0f, 0.0f };
+        }
+
+        vert1.Tangent = vert2.Tangent = vert3.Tangent = tangent;
+        vert1.Bitangent = vert2.Bitangent = vert3.Bitangent = bitangent;
+    }*/
+
+    std::vector<v3> vertices;
+
+    std::map<int, v3> tangents;
+    std::map<int, v3> bitangents;
+    std::map<int, std::vector<vertex_full*>> verticesRef;
+
     for (size_t i = 0; i < VertexCount; i += 3)
+    {
+        vertex_full& vert1 = Mesh[i + 0];
+        vertex_full& vert2 = Mesh[i + 1];
+        vertex_full& vert3 = Mesh[i + 2];
+
+        int i0 = AddToKnowVertices(vertices, vert1.Position);
+        int i1 = AddToKnowVertices(vertices, vert2.Position);
+        int i2 = AddToKnowVertices(vertices, vert3.Position);
+
+        verticesRef[i0].push_back(&vert1);
+        verticesRef[i1].push_back(&vert2);
+        verticesRef[i2].push_back(&vert3);
+
+        v3 deltaPos1 = vert2.Position - vert1.Position;
+        v3 deltaPos2 = vert3.Position - vert1.Position;
+
+        v2 deltaUV1 = vert2.UV - vert1.UV;
+        v2 deltaUV2 = vert3.UV - vert1.UV;
+
+        float f = 1.f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        v3 tangent = f * (deltaUV2.y * deltaPos1 - deltaUV1.y * deltaPos2);
+        v3 bitangent = f * (deltaUV1.x * deltaPos2 - deltaUV2.x * deltaPos1);
+
+        tangents[i0] += tangent;
+        tangents[i1] += tangent;
+        tangents[i2] += tangent;
+
+        bitangents[i0] += bitangent;
+        bitangents[i1] += bitangent;
+        bitangents[i2] += bitangent;
+    }
+
+    for (auto& [ID, ref] : verticesRef)
+    {
+        for (vertex_full* current : ref)
+        {
+            current->Tangent = tangents[ID];
+            current->Bitangent = bitangents[ID];
+        }
+    }
+
+    // Keep it to avoid losing it HAHAHAHAHAHAHA
+    /*for (size_t i = 0; i < VertexCount; i += 3)
     {
         vertex_full& vert1 = Mesh[i + 0];
         vertex_full& vert2 = Mesh[i + 1];
@@ -289,7 +402,7 @@ void Mesh::AddNormalMapParameters(vertex_full* Mesh, int VertexCount)
 
         vert1.Tangent = vert2.Tangent = vert3.Tangent = tangent;
         vert1.Bitangent = vert2.Bitangent = vert3.Bitangent = bitangent;
-    }
+    }*/
 }
 
 // Implement dumb caching to avoid parsing .obj again and again
@@ -371,6 +484,7 @@ bool Mesh::LoadObjNoConvertion(std::vector<vertex_full>& Mesh, const char* Filen
                         Attrib.vertices[Index.vertex_index * 3 + 2]
                     };
 
+
                     if (HasNormals)
                     {
                         V.Normal = {
@@ -427,6 +541,8 @@ bool Mesh::LoadObjNoConvertion(std::vector<vertex_full>& Mesh, const char* Filen
             }
         }
 
+        AddNormalMapParameters(Mesh);
+
         SaveObjToCache(Mesh, Filename);
     }
 
@@ -436,8 +552,6 @@ bool Mesh::LoadObjNoConvertion(std::vector<vertex_full>& Mesh, const char* Filen
         v3& Position = Mesh[i].Position;
         Position *= Scale;
     }
-
-    AddNormalMapParameters(Mesh);
 
     return true;
 }

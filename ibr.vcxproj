@@ -102,7 +102,7 @@
       <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>26451</DisableSpecificWarnings>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>26451</DisableSpecificWarnings>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -224,19 +224,31 @@
     <ClInclude Include="src\types.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\ShaderBRDF.frag" />
-    <None Include="src\ShaderBRDF.vert" />
-    <None Include="src\ShaderIrradianceMap.frag" />
-    <None Include="src\ShaderIrradianceMap.vert" />
-    <None Include="src\ShaderPBR.frag" />
-    <None Include="src\ShaderPBR.vert" />
-    <None Include="src\ShaderPrefilterMap.frag" />
-    <None Include="src\SkyboxShader.frag" />
-    <None Include="src\SkyboxShader.vert" />
-    <None Include="src\SphereMapShader.frag" />
-    <None Include="src\SphereMapShader.vert" />
-    <None Include="src\uber_shader.frag" />
-    <None Include="src\uber_shader.vert" />
+    <None Include="src\shaders\outline_shader.frag" />
+    <None Include="src\shaders\outline_shader.vert" />
+    <None Include="src\Shaders\picking_shader.frag" />
+    <None Include="src\Shaders\picking_shader.vert" />
+    <None Include="src\Shaders\reflection_shader.frag" />
+    <None Include="src\Shaders\reflection_shader.vert" />
+    <None Include="src\Shaders\ShaderBRDF.frag" />
+    <None Include="src\Shaders\ShaderBRDF.vert" />
+    <None Include="src\Shaders\ShaderIrradianceMap.frag" />
+    <None Include="src\Shaders\ShaderIrradianceMap.vert" />
+    <None Include="src\Shaders\ShaderPBR.frag" />
+    <None Include="src\Shaders\ShaderPBR.vert" />
+    <None Include="src\Shaders\ShaderPrefilterMap.frag" />
+    <None Include="src\Shaders\shadow_shader.frag" />
+    <None Include="src\Shaders\shadow_shader.vert" />
+    <None Include="src\Shaders\SkyboxShader.frag" />
+    <None Include="src\Shaders\SkyboxShader.vert" />
+    <None Include="src\Shaders\skybox_shader.frag" />
+    <None Include="src\Shaders\skybox_shader.vert" />
+    <None Include="src\Shaders\SphereMapShader.frag" />
+    <None Include="src\Shaders\SphereMapShader.vert" />
+    <None Include="src\shaders\toon_shader.frag" />
+    <None Include="src\shaders\toon_shader.vert" />
+    <None Include="src\Shaders\uber_shader.frag" />
+    <None Include="src\Shaders\uber_shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

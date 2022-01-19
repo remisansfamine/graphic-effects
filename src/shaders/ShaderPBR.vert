@@ -31,7 +31,7 @@ void main()
    vUV = aUV;
    vec4 pos4 = (uModel * vec4(aPosition, 1.0));
    vPos = pos4.xyz;
-   vNormal = (uModelNormalMatrix * vec4(aNormal, 0.0)).xyz;
+   vNormal = N;
 
    gl_Position = uProjection * uView * pos4;
 }

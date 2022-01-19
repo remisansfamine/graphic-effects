@@ -12,10 +12,19 @@
 
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
+const std::string skyboxFaces[6] = {
+    "media\\right.jpg",
+    "media\\left.jpg",
+    "media\\top.jpg",
+    "media\\bottom.jpg",
+    "media\\front.jpg",
+    "media\\back.jpg"
+};
+
 demo_all::demo_all(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug)
     : GLDebug(GLDebug)
 {
-    UberProgram.ID = GL::CreateProgramFromFiles("src/uber_shader.vert", "src/uber_shader.frag");
+    UberProgram.ID = GL::CreateProgramFromFiles("src/shaders/uber_shader.vert", "src/shaders/uber_shader.frag");
 
     // Gen meshes
     {
@@ -54,6 +63,9 @@ demo_all::demo_all(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug
     }
 
     SetupLight();
+
+    CubeMap.Create(skyboxFaces);
+
     // Normal map (vertex shader position TBN)
     // Hdr
     // Skybox
@@ -99,7 +111,8 @@ void demo_all::SetupLight()
     this->Lights[1] = this->Lights[2] = this->Lights[3] = this->Lights[4] = this->Lights[5] = CandleLight;
 
     // Candle positions (taken from mesh data)
-    this->Lights[1].Position = { -3.214370f,-0.162299f, 5.547660f, 1.f }; // Candle 1
+    this->Lights[1].Position = { 0.f, 2.f, -5.f, 1.f }; // Candle 1
+    this->Lights[1].Attenuation = { 0.f, 0.f, 1.f, }; // Candle 1
     this->Lights[2].Position = { -4.721620f,-0.162299f, 2.590890f, 1.f }; // Candle 2
     this->Lights[3].Position = { -2.661010f,-0.162299f, 0.235029f, 1.f }; // Candle 3
     this->Lights[4].Position = { 0.012123f, 0.352532f,-2.302700f, 1.f }; // Candle 4
@@ -114,9 +127,18 @@ void demo_all::SetupLight()
     }
 }
 
-void demo_all::SetupOpenGL()
+void demo_all::MoveLight(const platform_io& IO, const v3& offset)
 {
+    float radius = 4.f;
 
+    Lights[1].Position.x = radius * cosf(IO.Time);
+    Lights[1].Position.z = radius * sinf(IO.Time);
+
+    Lights[1].Position.xyz += offset;
+
+    glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 1 * sizeof(GL::light), sizeof(GL::light), &Lights[1]);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 
@@ -135,6 +157,8 @@ void demo_all::Update(const platform_io& IO)
     mat4 ViewMatrix = CameraGetInverseMatrix(Camera);
     mat4 ModelMatrix = Mat4::Translate({ 0.f, 0.f, -5.f });
 
+    MoveLight(IO, { 0.f, 0.f, -5.f });
+
     // Setup GL state
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -143,6 +167,8 @@ void demo_all::Update(const platform_io& IO)
     // Clear screen
     glClearColor(0.2f, 0.2f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    CubeMap.Draw(ProjectionMatrix, ViewMatrix);
 
     // Use shader and send data
     UberProgram.bind();

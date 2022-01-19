@@ -78,7 +78,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 {
     // Gen cube and its program
     {
-        Program = GL::CreateProgramFromFiles("src/ShaderPBR.vert", "src/ShaderPBR.frag");
+        Program = GL::CreateProgramFromFiles("src/shaders/ShaderPBR.vert", "src/shaders/ShaderPBR.frag");
 
         {
             // Use vbo from GLCache
@@ -250,7 +250,7 @@ void demo_pbr::SetupQuad(GL::cache& GLCache)
 
 void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 {
-    sphereMap.Program = GL::CreateProgramFromFiles("src/SphereMapShader.vert", "src/SphereMapShader.frag");
+    sphereMap.Program = GL::CreateProgramFromFiles("src/shaders/SphereMapShader.vert", "src/shaders/SphereMapShader.frag");
     //Load HDR spheremap
 
     stbi_set_flip_vertically_on_load(true);
@@ -291,7 +291,7 @@ void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 
 void demo_pbr::SetupSkybox()
 {
-    skybox.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/SkyboxShader.frag");
+    skybox.Program = GL::CreateProgramFromFiles("src/shaders/SkyboxShader.vert", "src/shaders/SkyboxShader.frag");
 
     //Environment cubemap
     glGenTextures(1, &skybox.envCubemap);
@@ -314,7 +314,7 @@ void demo_pbr::SetupSkybox()
 
 void demo_pbr::SetupIrradianceMap()
 {
-    irradiance.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/ShaderIrradianceMap.frag");
+    irradiance.Program = GL::CreateProgramFromFiles("src/shaders/SkyboxShader.vert", "src/shaders/ShaderIrradianceMap.frag");
 
     glGenTextures(1, &irradiance.irradianceMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
@@ -332,7 +332,7 @@ void demo_pbr::SetupIrradianceMap()
 
 void demo_pbr::SetupPrefilterMap()
 {
-    prefilterMap.Program = GL::CreateProgramFromFiles("src/SkyboxShader.vert", "src/ShaderPrefilterMap.frag");
+    prefilterMap.Program = GL::CreateProgramFromFiles("src/shaders/SkyboxShader.vert", "src/shaders/ShaderPrefilterMap.frag");
 
     glGenTextures(1, &prefilterMap.prefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
@@ -355,7 +355,7 @@ void demo_pbr::SetupPrefilterMap()
 
 void demo_pbr::SetupBDRF()
 {
-    brdf.Program = GL::CreateProgramFromFiles("src/ShaderBRDF.vert", "src/ShaderBRDF.frag");
+    brdf.Program = GL::CreateProgramFromFiles("src/shaders/ShaderBRDF.vert", "src/shaders/ShaderBRDF.frag");
 
     glGenTextures(1, &brdf.LUTTexture);
 

@@ -9,13 +9,14 @@ namespace GL
 {
 	struct Texture
 	{
-		Texture() = default;
+		Texture(GLenum _Flag) : Flag(_Flag) {}
 		~Texture() = default;
 
 		GLuint ID = 0;
+		GLenum Flag = 0;
 
-		void bind() { glBindTexture(GL_TEXTURE_2D, ID); }
-		static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
+		void bind() { glBindTexture(Flag, ID); }
+		void unbind() { glBindTexture(Flag, 0); }
 	};
 
 	struct Renderbuffer
@@ -57,7 +58,7 @@ namespace GL
 		~Framebuffer() { glDeleteFramebuffers(1, &ID); }
 
 		GLuint ID = 0;
-		Texture ColorTexture;
+		Texture ColorTexture = Texture(GL_TEXTURE_2D);
 		Renderbuffer DepthStencilRenderbuffer;
 
 		void bind() { glBindFramebuffer(GL_FRAMEBUFFER, ID);  }
@@ -98,6 +99,18 @@ namespace RBS
 
 	struct CubeMap
 	{
-		GL::Texture Tex;
+		Mesh CubeMesh;
+
+		GL::Program Program;
+		GL::VertexArrayObject VAO;
+		GL::VertexBufferObject VBO;
+		GL::Texture Texture = GL::Texture(GL_TEXTURE_CUBE_MAP);
+
+		void Create(const std::string facesStr[6]);
+		void Draw(const mat4& ProjectionMatrix, const mat4& ViewMatrix);
+
+	private:
+		void GenerateTextures(const std::string facesStr[6]);
+		void BuildCube();
 	};
 }

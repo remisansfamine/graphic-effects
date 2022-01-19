@@ -43,6 +43,27 @@
     <Filter Include="Resource Files\ShadersAll">
       <UniqueIdentifier>{4152e67a-4e94-48f8-b62f-57d5658a14ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\shaders\Picking">
+      <UniqueIdentifier>{78e31a75-1fa2-4575-898f-533fbebb8c6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\Outline">
+      <UniqueIdentifier>{3025410b-479e-4791-8e6d-eee0ac179534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\Toon">
+      <UniqueIdentifier>{0666f67e-e023-4d06-9bf3-b758f5858b92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\Skybox">
+      <UniqueIdentifier>{053ebe9d-8bf3-40e6-82cf-cc538203f5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\Shadows">
+      <UniqueIdentifier>{bb196905-8426-41a6-8122-46108f742893}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\PBR">
+      <UniqueIdentifier>{ade17814-eec5-4ba2-bc64-48d1179f4512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\Reflection">
+      <UniqueIdentifier>{e30d9cfc-cecc-4c41-a95a-ff5233c68fa6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\camera.cpp">
@@ -262,44 +283,80 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\ShaderPBR.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderPBR.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\SphereMapShader.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\SphereMapShader.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\SkyboxShader.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\SkyboxShader.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderIrradianceMap.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderIrradianceMap.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderPrefilterMap.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderBRDF.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\ShaderBRDF.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="src\uber_shader.frag">
+    <None Include="src\Shaders\uber_shader.frag">
       <Filter>Resource Files\ShadersAll</Filter>
     </None>
-    <None Include="src\uber_shader.vert">
+    <None Include="src\Shaders\uber_shader.vert">
       <Filter>Resource Files\ShadersAll</Filter>
+    </None>
+    <None Include="src\Shaders\picking_shader.vert">
+      <Filter>Resource Files\shaders\Picking</Filter>
+    </None>
+    <None Include="src\Shaders\picking_shader.frag">
+      <Filter>Resource Files\shaders\Picking</Filter>
+    </None>
+    <None Include="src\shaders\outline_shader.vert">
+      <Filter>Resource Files\shaders\Outline</Filter>
+    </None>
+    <None Include="src\shaders\outline_shader.frag">
+      <Filter>Resource Files\shaders\Outline</Filter>
+    </None>
+    <None Include="src\shaders\toon_shader.vert">
+      <Filter>Resource Files\shaders\Toon</Filter>
+    </None>
+    <None Include="src\shaders\toon_shader.frag">
+      <Filter>Resource Files\shaders\Toon</Filter>
+    </None>
+    <None Include="src\Shaders\shadow_shader.frag">
+      <Filter>Resource Files\shaders\Shadows</Filter>
+    </None>
+    <None Include="src\Shaders\shadow_shader.vert">
+      <Filter>Resource Files\shaders\Shadows</Filter>
+    </None>
+    <None Include="src\Shaders\skybox_shader.frag">
+      <Filter>Resource Files\shaders\Skybox</Filter>
+    </None>
+    <None Include="src\Shaders\skybox_shader.vert">
+      <Filter>Resource Files\shaders\Skybox</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderIrradianceMap.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderIrradianceMap.vert">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderPBR.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderPBR.vert">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderPrefilterMap.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\SkyboxShader.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\SkyboxShader.vert">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\SphereMapShader.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\SphereMapShader.vert">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderBRDF.vert">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\ShaderBRDF.frag">
+      <Filter>Resource Files\shaders\PBR</Filter>
+    </None>
+    <None Include="src\Shaders\reflection_shader.vert">
+      <Filter>Resource Files\shaders\Reflection</Filter>
+    </None>
+    <None Include="src\Shaders\reflection_shader.frag">
+      <Filter>Resource Files\shaders\Reflection</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
             std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
             //std::make_unique<demo_skybox>(GLCache, GLDebug),
             //std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_npr>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_npr>(App.IO, GLCache, GLDebug),
             //std::make_unique<demo_deferred_shading>(App.IO, GLCache, GLDebug),
             //std::make_unique<demo_instancing>(GLCache, GLDebug),
             //std::make_unique<demo_shadowMap>(GLCache, GLDebug),

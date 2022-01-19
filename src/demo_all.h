@@ -21,18 +21,19 @@ public:
 private:
 
     void SetupLight();
-    void SetupOpenGL();
+    void MoveLight(const platform_io& IO, const v3& offset);
 
     GL::debug& GLDebug;
 
     // 3d camera
     camera Camera = {};
 
-    GL::Texture diffuseTex;
-    GL::Texture normalMap;
+    GL::Texture diffuseTex  = GL::Texture(GL_TEXTURE_2D);
+    GL::Texture normalMap   = GL::Texture(GL_TEXTURE_2D);
 
     RBS::Mesh QuadMesh;
     RBS::Mesh BackpackMesh;
+    RBS::CubeMap CubeMap;
 
     // GL objects needed by this demos
     GL::Program UberProgram;

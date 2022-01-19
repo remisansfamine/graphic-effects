@@ -65,7 +65,7 @@ void main()
 
     vs_out.TSViewPos = vs_out.TBN * uViewPosition;
 
-    vs_out.normal = (uModelNormalMatrix * vec4(aNormal, 0.0)).xyz;
+    vs_out.normal = N;
 
     gl_Position = uProjection * uView * pos4;
     

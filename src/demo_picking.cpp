@@ -97,29 +97,6 @@ void main()
     oColor = vec4((ambientColor + diffuseColor + specularColor + emissiveColor), 1.0) * vec4(uColor, 1.0);
 })GLSL";
 
-static const char* gVertexShaderPickStr = R"GLSL(
-// Attributes
-layout(location = 0) in vec3 aPosition;
-
-// Uniforms
-uniform mat4 uViewProjection;
-uniform mat4 uModel;
-
-void main()
-{
-    gl_Position = uViewProjection * uModel * vec4(aPosition, 1.0);
-})GLSL";
-
-static const char* gFragmentShaderPickStr = R"GLSL(
-out vec4 oColor;
-
-uniform vec4 uPickingColor;
-
-void main()
-{
-    oColor = uPickingColor;
-})GLSL";
-
 demo_picking::demo_picking(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug)
     : GLCache(GLCache), GLDebug(GLDebug), TavernScene(GLCache)
 {
@@ -145,7 +122,7 @@ demo_picking::demo_picking(const platform_io& IO, GL::cache& GLCache, GL::debug&
 
 
     // Create render pipeline
-    Picking.Program = GL::CreateProgram(gVertexShaderPickStr, gFragmentShaderPickStr);
+    Picking.Program = GL::CreateProgramFromFiles("src/shaders/picking_shader.vert", "src/shaders/picking_shader.frag");
 
     // Gen mesh
     {
