@@ -16,6 +16,8 @@
 using namespace GL;
 
 static const char* ShaderStructsDefinitionsStr = R"GLSL(
+#version 330 core
+
 #line 19
 // Light structure
 struct light

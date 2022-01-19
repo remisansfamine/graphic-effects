@@ -23,6 +23,8 @@ struct vertex
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
 static const char* gVertexShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -49,6 +51,8 @@ void main()
 })GLSL";
 
 static const char* gFragmentShaderStr = R"GLSL(
+#version 330 core
+
 // Varyings
 in vec2 vUV;
 in vec3 vPos;
@@ -100,6 +104,8 @@ void main()
 // Shaders
 // ==================================================
 static const char* gPPVertShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -117,6 +123,8 @@ void main()
 })GLSL";
 
 static const char* gPPFragShaderStr = R"GLSL(
+#version 330 core
+
 // Varyings
 in vec2 vUV;
 

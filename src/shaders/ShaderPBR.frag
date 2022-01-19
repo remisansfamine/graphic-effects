@@ -158,9 +158,9 @@ void main()
 {
     TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
 
-    Pos = TBN * vPos;
+    Pos = vPos;//TBN * vPos;
     vec3 N = normalize(vNormal);
-    vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
+    vec3 V = normalize(uViewPosition.xyz - Pos.xyz);//normalize(TBN * uViewPosition.xyz - Pos.xyz);
 
     vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
@@ -169,7 +169,10 @@ void main()
     float specularWeight = uMaterial.specular;
 
     if (uMaterial.hasNormalMap)
-            N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+    {
+        N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+        N = normalize(vTBN * N);
+    }
 
     vec3 R = reflect(-V, N); 
     
@@ -188,7 +191,7 @@ void main()
         if (!uLight[i].enabled)
             continue;
 
-        vec3 lightPos = TBN * uLight[i].position.xyz;
+        vec3 lightPos = uLight[i].position.xyz;//TBN * uLight[i].position.xyz;
 
         // calculate per-light radiance
         vec3 L = normalize(lightPos - Pos.xyz);

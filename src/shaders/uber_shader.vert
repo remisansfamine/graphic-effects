@@ -54,12 +54,13 @@ void main()
     vec4 pos4 = uModel * vec4(aPosition, 1.0);
     vs_out.fragPos = vec3(pos4);
 
-    vec3 T = normalize(mat3(uModelNormalMatrix) * aTangent);
-    vec3 N = normalize(mat3(uModelNormalMatrix) * aNormal);
+    vec3 T = normalize(mat3(uModel) * aTangent);
+    vec3 N = normalize(mat3(uModel) * aNormal);
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
     
-    vs_out.TBN = transpose(mat3(T, B, N));
+    //vs_out.TBN = transpose(mat3(T, B, N));
+    vs_out.TBN = mat3(T, B, N);
 
     vs_out.TSFragPos = vs_out.TBN * vs_out.fragPos;
 

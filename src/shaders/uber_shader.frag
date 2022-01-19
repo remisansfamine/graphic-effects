@@ -106,6 +106,7 @@ light_shade_result light_shade(light light, float shininess, vec3 eyePosition, v
 // Uniforms
 uniform sampler2D uDiffuseTexture;
 uniform sampler2D uNormalMap;
+uniform vec3 uViewPosition;
 
 // Shader outputs
 out vec4 oColor;
@@ -116,9 +117,10 @@ light_shade_result get_lights_shading(in vec3 normal)
 	for (int i = 0; i < LIGHT_COUNT; ++i)
     {
         light currLight = uLight[i];
-        currLight.position.xyz = fs_in.TSLightsPos[i].xyz;
+        //currLight.position.xyz = fs_in.TSLightsPos[i].xyz;
 
-        light_shade_result currLightResult = light_shade(currLight, gDefaultMaterial.shininess, fs_in.TSViewPos, fs_in.TSFragPos, normal);
+        //light_shade_result currLightResult = light_shade(currLight, gDefaultMaterial.shininess, fs_in.TSViewPos, fs_in.TSFragPos, normal);
+        light_shade_result currLightResult = light_shade(currLight, gDefaultMaterial.shininess, uViewPosition, fs_in.fragPos, normal);
         lightResult.ambient  += currLightResult.ambient;
         lightResult.diffuse  += currLightResult.diffuse;
         lightResult.specular += currLightResult.specular;
@@ -130,6 +132,7 @@ void main()
 {
     vec3 normal = texture(uNormalMap, fs_in.UV).rgb;
     normal = normalize(normal * 2.0 - 1.0);
+    normal = normalize(fs_in.TBN * normal);
 
     // Compute phong shading
     light_shade_result lightResult = get_lights_shading(normal);

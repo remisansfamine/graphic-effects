@@ -21,12 +21,12 @@ out mat3 vTBN;
 
 void main()
 {
-   vec3 T = normalize(mat3(uModelNormalMatrix) * aTangent);
-   vec3 N = normalize(mat3(uModelNormalMatrix) * aNormal);
+   vec3 T = normalize(mat3(uModel) * aTangent);
+   vec3 N = normalize(mat3(uModel) * aNormal);
    T = normalize(T - dot(T, N) * N);
    vec3 B = cross(N, T);
    
-   vTBN = transpose(mat3(T, B, N));
+   vTBN = mat3(T, B, N);
 
    vUV = aUV;
    vec4 pos4 = (uModel * vec4(aPosition, 1.0));

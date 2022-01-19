@@ -391,12 +391,12 @@ void demo_pbr::SetupPBR()
     mat4 captureProjectionMatrix = Mat4::Perspective(Math::ToRadians(90.f), 1.0f, 0.1f, 10.f);
     mat4 captureViews[] =
     {
-       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {1.0f,  0.0f,  0.0f}, v3{0.0f, -1.0f,  0.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {-1.0f,  0.0f,  0.0f},v3{0.0f, -1.0f,  0.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {1.0f,  0.0f,  0.0f}, v3{0.0f, -1.0f,  0.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  1.0f,  0.0f}, v3{0.0f,  0.0f,  1.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f, -1.0f,  0.0f}, v3{0.0f,  0.0f, -1.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
-       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f}),
     };
 
     //Setup spheremap
