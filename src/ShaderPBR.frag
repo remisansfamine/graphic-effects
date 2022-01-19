@@ -238,14 +238,20 @@ vec3 getClearCoatBDRF(vec3 V, vec3 N, float clearCoatRoughness, vec3 F0)
             continue;
 
         vec3 lightPos = TBN * uLight[i].position.xyz;
+
+        vec3 lightDirection = lightPos;
+
+        if (uLight[i].lightType != 1)
+            lightDirection -= Pos;
+            
         float lightIntensity = uLight[i].params.z;
 
         // calculate per-light radiance
-        vec3 L = normalize(lightPos - Pos.xyz);
+        vec3 L = normalize(lightDirection);
         vec3 H = normalize(V + L);
 
-        float distance = length(lightPos - Pos.xyz);
-        float attenuation = 1.0 / (distance * distance);
+        float attenuation = getLightAttenuation(uLight[i].lightType, lightDirection, 
+        TBN * uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
 
         float Dc = DistributionGGX(N, H, clearCoatRoughness);        
         float Vc = V_Kelemen(clearCoatRoughness, max(dot(L,H), 0.0));      
@@ -275,7 +281,7 @@ void main()
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
     float roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
     float ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
-    float specularWeight = uMaterial.specular/* * texture(uMaterial.specularMap, vUV).r*/;
+    float specularWeight = uMaterial.specular * texture(uMaterial.specularMap, vUV).r;
 
     if (uMaterial.hasNormalMap)
             N = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
@@ -311,12 +317,12 @@ void main()
     {
         float clearCoatRoughness = clamp(uMaterial.clearCoatRoughness, 0.089, 1.0);
         clearCoatRoughness = pow(clearCoatRoughness, 2.0);
-
+    
         clearCoat += getClearCoatBDRF(V, N, clearCoatRoughness, F0); //BDRF
-
+    
         if (hasIrradianceMap)
             clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0, 1.0); //IBL
-
+    
         //clearCoat
         clearCoat = clearCoat * uMaterial.clearCoat;
         clearCoatFresnel = FresnelSchlick(max(dot(N,V), 0.0), F0);
