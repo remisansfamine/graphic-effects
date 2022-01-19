@@ -18,8 +18,9 @@ struct vertex
 
 struct MaterialPBR
 {
-    GLuint normalMap;
     GLuint albedoMap;
+    GLuint normalMap;
+    GLuint specularMap;
     GLuint metallicMap;
     GLuint roughnessMap;
     GLuint aoMap;

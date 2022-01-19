@@ -26,8 +26,9 @@ struct light
 
 struct material
 {
-    sampler2D normalMap;
     sampler2D albedoMap;
+    sampler2D normalMap;
+    sampler2D specularMap;
     sampler2D metallicMap;
     sampler2D roughnessMap;
     sampler2D aoMap;
@@ -274,7 +275,7 @@ void main()
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
     float roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
     float ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
-    float specularWeight = uMaterial.specular;
+    float specularWeight = uMaterial.specular/* * texture(uMaterial.specularMap, vUV).r*/;
 
     if (uMaterial.hasNormalMap)
             N = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;

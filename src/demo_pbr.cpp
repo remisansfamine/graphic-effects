@@ -130,6 +130,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    
     }
 
     //No Textures
@@ -147,6 +149,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    // 
     //}
 
     ////Anisotrope and clear coat test
@@ -166,20 +170,22 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_roughness_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //
     //}
 
     // Set uniforms that won't change
     {
         glUseProgram(Program);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.normalMap"), 0);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.albedoMap"), 1);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.metallicMap"), 2);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 3);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 4);
-        glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 5);
-        glUniform1i(glGetUniformLocation(Program, "prefilterMap"), 6);
-        glUniform1i(glGetUniformLocation(Program, "brdfLUT"), 7);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.albedoMap"), 0);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.normalMap"), 1);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.specularMap"), 2);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.metallicMap"), 3);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 4);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 5);
+        glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 6);
+        glUniform1i(glGetUniformLocation(Program, "prefilterMap"), 7);
+        glUniform1i(glGetUniformLocation(Program, "brdfLUT"), 8);
     }
 
 }
@@ -372,6 +378,7 @@ demo_pbr::~demo_pbr()
 {
     glDeleteTextures(1, &materialPBR.normalMap);
     glDeleteTextures(1, &materialPBR.albedoMap);
+    glDeleteTextures(1, &materialPBR.specularMap);
     glDeleteTextures(1, &materialPBR.metallicMap);
     glDeleteTextures(1, &materialPBR.roughnessMap);
     glDeleteTextures(1, &materialPBR.aoMap);
@@ -609,29 +616,32 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, LightsUniformBuffer);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
-
-    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, materialPBR.albedoMap);
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
+
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.specularMap);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
 
     glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
+
+    glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, materialPBR.aoMap);
 
     if (irradiance.hasIrradianceMap)
     {
-        glActiveTexture(GL_TEXTURE5);
+        glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
 
-        glActiveTexture(GL_TEXTURE6);
+        glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
 
-        glActiveTexture(GL_TEXTURE7);
+        glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, brdf.LUTTexture);
     }
 
