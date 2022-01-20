@@ -1,10 +1,10 @@
 #include "demo_pbr.h"
-
 #include "color.h"
 #include <imgui.h>
 
 #include "stb_image.h"
 #include <iostream>
+#include "maths.h"
 
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
@@ -48,27 +48,27 @@ void demo_pbr::SetupLight()
         glUniformBlockBinding(Program, glGetUniformBlockIndex(Program, "uLightBlock"), LIGHT_BLOCK_BINDING_POINT);
     }
 
-    Lights.resize(4);
+    Lights.resize(1);
 
-    GL::light Light = {};
-    Light.Enabled = true;
-    Light.Diffuse = { 50,50,50 };
-    Light.Specular = Light.Diffuse;
-    Light.Attenuation = { 0.f, 0.f, 2.0f };
-
-    this->Lights[0] = this->Lights[1] = this->Lights[2] = this->Lights[3] = Light;
-
-    // Candle positions (taken from mesh data)
-    this->Lights[0].Position = { -10, 10 , 5, 0.f };
-    this->Lights[1].Position = { 10, 10 , 5, 0.f };
-    this->Lights[2].Position = { -10, -10 , 5, 0.f };
-    this->Lights[3].Position = { 10, -10 , 5, 0.f };
+    lightPBR light = {};
+    light.lightType = 2; //PointLight
+    light.diffuse = { 1,1,1 };
+    light.params.e[2] = 1; //Intensity
+    light.params.e[0] = cosf(3.14f/4.f);
+    light.params.e[1] = cosf(3.14f/2.f);
+    
+    //this->Lights[0] = this->Lights[1] = this->Lights[2] = this->Lights[3] = light;
+    this->Lights[0] = light;
+    this->Lights[0].position = { -10, 10 , 5, 0.f };
+    //this->Lights[1].position = { 10, 10 , 5, 0.f };
+    //this->Lights[2].position = { -10, -10 , 5, 0.f };
+    //this->Lights[3].position = { 10, -10 , 5, 0.f };
 
     // Gen light uniform buffer
     {
         glGenBuffers(1, &LightsUniformBuffer);
         glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
-        glBufferData(GL_UNIFORM_BUFFER, Lights.size() * sizeof(GL::light), Lights.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, Lights.size() * sizeof(lightPBR), Lights.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 }
@@ -129,6 +129,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    
     }
 
     //No Textures
@@ -146,6 +148,8 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    // 
     //}
 
     ////Anisotrope and clear coat test
@@ -165,20 +169,22 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
     //    materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/Carbon/carbon_fibers_roughness_1k.jpg", IMG_FLIP | IMG_GEN_MIPMAPS);
     //    materialPBR.aoMap = GLCache.LoadTexture("media/PBR/Carbon/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    //    materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
     //
     //}
 
     // Set uniforms that won't change
     {
         glUseProgram(Program);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.normalMap"), 0);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.albedoMap"), 1);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.metallicMap"), 2);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 3);
-        glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 4);
-        glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 5);
-        glUniform1i(glGetUniformLocation(Program, "prefilterMap"), 6);
-        glUniform1i(glGetUniformLocation(Program, "brdfLUT"), 7);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.albedoMap"), 0);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.normalMap"), 1);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.specularMap"), 2);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.metallicMap"), 3);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.roughnessMap"), 4);
+        glUniform1i(glGetUniformLocation(Program, "uMaterial.aoMap"), 5);
+        glUniform1i(glGetUniformLocation(Program, "irradianceMap"), 6);
+        glUniform1i(glGetUniformLocation(Program, "prefilterMap"), 7);
+        glUniform1i(glGetUniformLocation(Program, "brdfLUT"), 8);
     }
 
 }
@@ -372,6 +378,7 @@ demo_pbr::~demo_pbr()
 {
     glDeleteTextures(1, &materialPBR.normalMap);
     glDeleteTextures(1, &materialPBR.albedoMap);
+    glDeleteTextures(1, &materialPBR.specularMap);
     glDeleteTextures(1, &materialPBR.metallicMap);
     glDeleteTextures(1, &materialPBR.roughnessMap);
     glDeleteTextures(1, &materialPBR.aoMap);
@@ -618,29 +625,32 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_BLOCK_BINDING_POINT, LightsUniformBuffer);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
-
-    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, materialPBR.albedoMap);
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.normalMap);
+
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.specularMap);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.metallicMap);
 
     glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, materialPBR.roughnessMap);
+
+    glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, materialPBR.aoMap);
 
     if (irradiance.hasIrradianceMap)
     {
-        glActiveTexture(GL_TEXTURE5);
+        glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance.irradianceMap);
 
-        glActiveTexture(GL_TEXTURE6);
+        glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
 
-        glActiveTexture(GL_TEXTURE7);
+        glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, brdf.LUTTexture);
     }
 
@@ -652,17 +662,25 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
 
 }
 
-static bool EditLight(GL::light* Light)
+static bool EditLight(lightPBR* Light)
 {
+    float cutOff = Math::ToDegrees(acosf(Light->params.e[0]));
+    float outerCutOff = Math::ToDegrees(acosf(Light->params.e[1]));
+
     bool Result =
-            ImGui::Checkbox("Enabled", (bool*)&Light->Enabled)
-        + ImGui::SliderFloat4("Position", Light->Position.e, -4.f, 4.f)
-        + ImGui::ColorEdit3("Ambient", Light->Ambient.e)
-        + ImGui::ColorEdit3("Diffuse", Light->Diffuse.e)
-        + ImGui::ColorEdit3("Specular", Light->Specular.e)
-        + ImGui::SliderFloat("Attenuation (constant)", &Light->Attenuation.e[0], 0.f, 10.f)
-        + ImGui::SliderFloat("Attenuation (linear)", &Light->Attenuation.e[1], 0.f, 10.f)
-        + ImGui::SliderFloat("Attenuation (quadratic)", &Light->Attenuation.e[2], 0.f, 10.f);
+        ImGui::SliderInt("Light Type", &Light->lightType, 0, 4)
+        + ImGui::SliderFloat4("Position", Light->position.e, -4.f, 4.f)
+        + ImGui::SliderFloat3("Rotation", Light->direction.e, -4.f, 4.f)
+        + ImGui::ColorEdit3("Diffuse", Light->diffuse.e)
+        + ImGui::SliderFloat("Intensity", &Light->params.e[2], 0.f, 100.f)
+        + ImGui::SliderFloat("CuttOff", &cutOff, 0.f, 180.f)
+        + ImGui::SliderFloat("OuterCuttOff", &outerCutOff, 0.f, 180.f);
+
+    if (Result)
+    {
+        Light->params.e[0] = cosf(Math::ToRadians(cutOff));
+        Light->params.e[1] = cosf(Math::ToRadians(outerCutOff));
+    }
     return Result;
 }
 
@@ -681,27 +699,16 @@ void demo_pbr::DisplayDebugUI()
         
         if (ImGui::TreeNodeEx("Lights"))
         {
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < Lights.size(); ++i)
             {
                 if (ImGui::TreeNode(&Lights[i], "Light[%d]", i))
                 {
-                    GL::light& Light = Lights[i];
+                    lightPBR& Light = Lights[i];
                     if (EditLight(&Light))
                     {
                         glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
-                        glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(GL::light), sizeof(GL::light), &Light);
+                        glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(lightPBR), sizeof(lightPBR), &Light);
                         glBindBuffer(GL_UNIFORM_BUFFER, 0);
-                    }
-
-                    // Calculate attenuation based on the light values
-                    if (ImGui::TreeNode("Attenuation calculator"))
-                    {
-                        static float Dist = 5.f;
-                        float Att = 1.f / (Light.Attenuation.e[0] + Light.Attenuation.e[1] * Dist + Light.Attenuation.e[2] * Light.Attenuation.e[2] * Dist);
-                        ImGui::Text("att(d) = 1.0 / (c + ld + qdd)");
-                        ImGui::SliderFloat("d", &Dist, 0.f, 20.f);
-                        ImGui::Text("att(%.2f) = %.2f", Dist, Att);
-                        ImGui::TreePop();
                     }
                     ImGui::TreePop();
                 }

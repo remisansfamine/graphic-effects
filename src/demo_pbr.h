@@ -18,8 +18,9 @@ struct vertex
 
 struct MaterialPBR
 {
-    GLuint normalMap;
     GLuint albedoMap;
+    GLuint normalMap;
+    GLuint specularMap;
     GLuint metallicMap;
     GLuint roughnessMap;
     GLuint aoMap;
@@ -35,6 +36,19 @@ struct MaterialPBR
     float clearCoat;
     float clearCoatRoughness;
 
+};
+
+struct lightPBR
+{
+    alignas(16) int lightType; //off/dir/point/spot
+    alignas(16) v4 position;
+    alignas(16) v3 direction;
+    alignas(16) v3 diffuse;
+    alignas(16) v3 params; //cutOff/outerCutOff/intensity
+    //alignas(16) float cutOff;
+    //alignas(16) float outerCutOff;
+    //
+    //alignas(16) float intensity;
 };
 
 class demo_pbr : public demo
@@ -143,7 +157,7 @@ private:
     int sphereCount;
     float origin;
 
-    std::vector<GL::light> Lights;
+    std::vector<lightPBR> Lights;
     GLuint LightsUniformBuffer = 0;
 
     bool PBRLoaded = false;

@@ -1,4 +1,4 @@
-#version 330 core
+//#version 330 core
 
 // Varyings
 in vec2 vUV;
@@ -16,18 +16,19 @@ vec3 Pos;
 // Light structure
 struct light
 {
-	bool enabled;
-    vec3 position;
-    vec3 ambient;
+	int lightType; //off/dir/point/spot
+    vec4 position;
+    vec3 direction;
     vec3 diffuse;
-    vec3 specular;
-    vec3 attenuation;
+    vec3 params; //cutOff/outerCutOff/intensity
+
 };
 
 struct material
 {
-    sampler2D normalMap;
     sampler2D albedoMap;
+    sampler2D normalMap;
+    sampler2D specularMap;
     sampler2D metallicMap;
     sampler2D roughnessMap;
     sampler2D aoMap;
@@ -154,68 +155,104 @@ vec3 getIBLRadianceLambertian(float NdotV, vec3 N, float roughness, vec3 albedo,
     return (FmsEms + kD) * irradiance;
 }
 
-void main()
+float getLightAttenuation(int lightType, vec3 lightDirection, vec3 spotDirection, float cutOff, float outerCutOff)
 {
-    TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
+    float attenuation = 1.0;
 
-    Pos = vPos;//TBN * vPos;
-    vec3 N = normalize(vNormal);
-    vec3 V = normalize(uViewPosition.xyz - Pos.xyz);//normalize(TBN * uViewPosition.xyz - Pos.xyz);
-
-    vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
-    float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
-    float roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
-    float ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
-    float specularWeight = uMaterial.specular;
-
-    if (uMaterial.hasNormalMap)
+    if (lightType == 2) //point light
     {
-        N     = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
-        N = normalize(vTBN * N);
+        float distance = length(lightDirection);
+        attenuation = 1.0 / (distance * distance);
+    }
+    else if (lightType == 3) //spotLight
+    {
+        float distance = length(lightDirection);
+        attenuation = 1.0 / (distance * distance);
+
+        float theta = -dot(normalize(lightDirection), normalize(spotDirection));
+        float epsilon = cutOff - outerCutOff;
+
+        attenuation = attenuation *  clamp((theta - outerCutOff) / epsilon, 0.0, 1.0);
     }
 
-    vec3 R = reflect(-V, N); 
-    
-    vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, albedo, metallic);
-    // reflectance equation
+    return attenuation;
+}
+
+vec3 getBDRFResult(vec3 V, vec3 N, vec3 albedo, float roughness, float metallic, vec3 F0, float specularWeight)
+{
     vec3 Lo = vec3(0.0);
-    
-    //clearCoat
-    float clearCoatRoughness = clamp(uMaterial.clearCoatRoughness, 0.089, 1.0);
-    clearCoatRoughness = pow(clearCoatRoughness, 2.0);
-    vec3 clearCoat = vec3(0.0);
 
     for(int i = 0; i < LIGHT_COUNT; ++i) 
     {
-        if (!uLight[i].enabled)
+        if (uLight[i].lightType == 0)
             continue;
 
-        vec3 lightPos = uLight[i].position.xyz;//TBN * uLight[i].position.xyz;
+        vec3 lightPos = TBN * uLight[i].position.xyz;
+        
+        vec3 lightDirection = lightPos;
+
+        if (uLight[i].lightType != 1)
+            lightDirection -= Pos;
+            
+        float lightIntensity = uLight[i].params.z;
 
         // calculate per-light radiance
-        vec3 L = normalize(lightPos - Pos.xyz);
+        vec3 L = normalize(lightDirection);
         vec3 H = normalize(V + L);
 
-        float distance = length(lightPos - Pos.xyz);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = uLight[i].diffuse * attenuation;        
+        float NdotL = max(dot(N, L), 0.0);
+        float HdotV = max(dot(H, V), 0.0);
+        float NdotV = max(dot(N, V), 0.0);
+
+        float attenuation = getLightAttenuation(uLight[i].lightType, lightDirection, 
+        TBN * uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
+
+        vec3 radiance = (lightIntensity * uLight[i].diffuse) * attenuation;        
         
         // cook-torrance brdf
         float NDF = DistributionGGX(N, H, roughness);        
         float G   = GeometrySmith(N, V, L, roughness);      
-        vec3 F    = FresnelSchlick(max(dot(H, V), 0.0), F0);       
+        vec3 F    = FresnelSchlick(HdotV, F0);       
         
         vec3 kS = F;
         vec3 kD = vec3(1.0) - specularWeight * kS;
         kD *= 1.0 - metallic;	  
         
         vec3 numerator    = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+        float denominator = 4.0 * NdotV * NdotL + 0.0001;
         vec3 specular     = numerator / denominator;  
 
+        Lo += ((kD * albedo / PI + specular * specularWeight) * radiance * NdotL); 
+    } 
 
-        //Clear Coat BDRF
+    return Lo;
+}
+
+
+vec3 getClearCoatBDRF(vec3 V, vec3 N, float clearCoatRoughness, vec3 F0)
+{
+    vec3 clearCoat = vec3(0.0);
+     for(int i = 0; i < LIGHT_COUNT; ++i) 
+    {
+        if (uLight[i].lightType == 0)
+            continue;
+
+        vec3 lightPos = TBN * uLight[i].position.xyz;
+
+        vec3 lightDirection = lightPos;
+
+        if (uLight[i].lightType != 1)
+            lightDirection -= Pos;
+            
+        float lightIntensity = uLight[i].params.z;
+
+        // calculate per-light radiance
+        vec3 L = normalize(lightDirection);
+        vec3 H = normalize(V + L);
+
+        float attenuation = getLightAttenuation(uLight[i].lightType, lightDirection, 
+        TBN * uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
+
         float Dc = DistributionGGX(N, H, clearCoatRoughness);        
         float Vc = V_Kelemen(clearCoatRoughness, max(dot(L,H), 0.0));      
         vec3 Fc  = FresnelSchlick(max(dot(H, V), 0.0), F0);  
@@ -225,37 +262,77 @@ void main()
         float NdotL = max(dot(N, L), 0.0);
 
         clearCoat += (Frc * NdotL ) * attenuation;
-        Lo += ((kD * albedo / PI + specular * specularWeight) * radiance * NdotL); 
     }   
 
-    vec3 ambient;
+    return clearCoat;
+}
 
+
+void main()
+{
+    TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
+
+    Pos = TBN * vPos;
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
+
+    vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
+    float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
+    float roughness = uMaterial.roughness * texture(uMaterial.roughnessMap, vUV).r;
+    float ao        = uMaterial.ao * texture(uMaterial.aoMap, vUV).r;
+    float specularWeight = uMaterial.specular * texture(uMaterial.specularMap, vUV).r;
+
+    if (uMaterial.hasNormalMap)
+            N = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+
+    vec3 R = reflect(-V, N); 
+    
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+
+    /* -- BDRF -- */
+    vec3 Lo = getBDRFResult(V, N, albedo, roughness, metallic, F0, specularWeight);
+    /* --------- */
+
+
+    /* -- IBL Irradiance -- */
+    vec3 ambient;
     if (hasIrradianceMap)
     {
         float NdotV = max(dot(N, V), 0.0);
-
-        /* -- IBL Irradiance -- */
         vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0, specularWeight);
         vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0, specularWeight);
         ambient = (specular + diffuse) * ao;
-
-        /* -- Clear Coat IBL --*/
-        clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0, 1.0);
     }
-    else
+    else //Lit
     {
         ambient = vec3(0.03) * albedo * ao;
     }
+    /* ------------------- */
+
+    /* -- Clear Coat --*/
+    vec3 clearCoat = vec3(0.0);
+    vec3 clearCoatFresnel = vec3(0.0);
+    if (uMaterial.clearCoat != 0.0)
+    {
+        float clearCoatRoughness = clamp(uMaterial.clearCoatRoughness, 0.089, 1.0);
+        clearCoatRoughness = pow(clearCoatRoughness, 2.0);
+    
+        clearCoat += getClearCoatBDRF(V, N, clearCoatRoughness, F0); //BDRF
+    
+        if (hasIrradianceMap)
+            clearCoat += getIBLRadianceGGX(NdotV, R, uMaterial.clearCoatRoughness, F0, 1.0); //IBL
+    
+        //clearCoat
+        clearCoat = clearCoat * uMaterial.clearCoat;
+        clearCoatFresnel = FresnelSchlick(max(dot(N,V), 0.0), F0);
+    }
+    /* -------------- */
 
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  //Gamma correction
-
-    //clearCoat
-    clearCoat = clearCoat * uMaterial.clearCoat;
-    vec3 clearCoatFresnel = FresnelSchlick(max(dot(N,V), 0.0), F0);
-
 
     color = color * (1.0 - uMaterial.clearCoat * clearCoatFresnel) + clearCoat;
     oColor = vec4(color, 1.0);
