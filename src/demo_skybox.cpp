@@ -75,7 +75,7 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
 
     // Gen cube and its program
     {
-        Skybox.Program = GL::CreateProgramFromFiles("src/skybox_shader.vert", "src/skybox_shader.frag");
+        Skybox.Program = GL::CreateProgramFromFiles("src/shaders/skybox_shader.vert", "src/shaders/skybox_shader.frag");
 
         vertex_descriptor Descriptor = {};
         Descriptor.Stride = sizeof(vertex);
@@ -106,7 +106,7 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
 
     // Gen cube and its program
     {
-        Program = GL::CreateProgramFromFiles("src/reflection_shader.vert", "src/reflection_shader.frag");
+        Program = GL::CreateProgramFromFiles("src/shaders/skybox_shader.vert", "src/shaders/skybox_shader.frag");
 
         vertex_descriptor Descriptor = {};
         Descriptor.Stride = sizeof(vertex_full);
@@ -132,6 +132,10 @@ demo_skybox::demo_skybox(GL::cache& GLCache, GL::debug& GLDebug)
         //glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+
+    glUseProgram(Program);
+    glUniform1i(glGetUniformLocation(Program, "uSkyTexture"), 0);
+    glUseProgram(0);
 }
 
   demo_skybox::~demo_skybox()
@@ -221,8 +225,6 @@ void demo_skybox::Update(const platform_io& IO)
     glUseProgram(Skybox.Program);
 
     // Set uniforms
-    //int skyId = 0;
-    //glUniform1iv(glGetUniformLocation(Program, "skyTexture"), 1, &skyId);
     glUniformMatrix4fv(glGetUniformLocation(Skybox.Program, "uViewProj"), 1, GL_FALSE, VPMatrix.e);
 
     // Bind texture

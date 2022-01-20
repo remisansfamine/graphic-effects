@@ -255,19 +255,18 @@ int main(int argc, char* argv[])
         int DemoId = 0; // Change this to start with another demo
         std::unique_ptr<demo> Demos[] =
         {
-            //std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
-            std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_pbr>(App.IO, GLCache, GLDebug),
-            std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_skybox>(GLCache, GLDebug),
-            //std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_fbo>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_shadowMap>(GLCache, GLDebug),
+            std::make_unique<demo_normal_map>(GLCache, GLDebug),
+            std::make_unique<demo_skybox>(GLCache, GLDebug),
+            std::make_unique<demo_hdr>(App.IO, GLCache, GLDebug),
             std::make_unique<demo_npr>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_deferred_shading>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_instancing>(GLCache, GLDebug),
-            //std::make_unique<demo_shadowMap>(GLCache, GLDebug),
-            //std::make_unique<demo_normal_map>(GLCache, GLDebug),
-            //std::make_unique<demo_picking>(App.IO, GLCache, GLDebug),
-            //std::make_unique<demo_base>(GLCache, GLDebug),
+            std::make_unique<demo_instancing>(GLCache, GLDebug),
+            std::make_unique<demo_all>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_picking>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_deferred_shading>(App.IO, GLCache, GLDebug),
+            std::make_unique<demo_base>(GLCache, GLDebug),
         };
 
         // Main loop

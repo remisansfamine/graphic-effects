@@ -22,6 +22,8 @@ struct vertex
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
 static const char* gVertexShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -48,7 +50,6 @@ void main()
 })GLSL";
 
 static const char* gFragmentShaderStr = R"GLSL(
-
 layout (location = 1) out vec4 BrightColor;
 
 // Varyings
@@ -108,6 +109,8 @@ void main()
 })GLSL";
 
 static const char* gVertexShaderHDRStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -165,6 +168,8 @@ void main()
 )GLSL";
 
 static const char* gVertexShaderBloomStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -432,6 +437,7 @@ void demo_hdr::Update(const platform_io& IO)
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+    glActiveTexture(GL_TEXTURE0);
 
     glUniform1i(glGetUniformLocation(ProgramHDR, "hdr"), hdr);
     glUniform1i(glGetUniformLocation(ProgramHDR, "bloom"), bloomIteration > 0);

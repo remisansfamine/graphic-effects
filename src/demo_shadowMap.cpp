@@ -31,23 +31,9 @@ static const std::string skyboxFaces[6] = {
     "media\\back.jpg"
 };
 
-static const char* gVertShaderStr = R"GLSL(
-layout (location = 0) in vec3 VertPos;
-
-uniform mat4 uLightSpaceMatrix;
-uniform mat4 uModel;
-
-void main()
-{
-	gl_Position = lightSpaceMatrix * model * vec4(VertPos, 1.0);
-})GLSL";
-
-static const char* gFragShaderStr = R"GLSL(
-void main()
-{
-})GLSL";
-
 static const char* gVertexShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -227,7 +213,7 @@ demo_shadowMap::demo_shadowMap(GL::cache& GLCache, GL::debug& GLDebug)
 
     Shadow.aspect = (float)Shadow.width / (float)Shadow.height;
 
-    Shadow.Program = GL::CreateProgramFromFiles("src/shadow_shader.vert", "src/shadow_shader.frag");
+    Shadow.Program = GL::CreateProgramFromFiles("src/shaders/shadow_shader.vert", "src/shaders/shadow_shader.frag");
 
     // Generate shadow map
     glGenFramebuffers(1, &Shadow.FBO);

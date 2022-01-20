@@ -15,6 +15,8 @@
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
 static const char* gGeoVertexShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -70,6 +72,8 @@ void main()
 })GLSL";
 
 static const char* gLightVertexShaderStr = R"GLSL(
+#version 330 core
+
 // Attributes
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUV;
@@ -157,7 +161,7 @@ demo_deferred_shading::demo_deferred_shading(const platform_io& IO, GL::cache& G
             gLightFragmentShaderStr,
         };
 
-        geometryProgram = GL::CreateProgramEx(1, &gGeoVertexShaderStr, 2, GeoFragmentShaderStrs);
+        geometryProgram = GL::CreateProgramEx(1, &gGeoVertexShaderStr, 2, GeoFragmentShaderStrs, true);
 
         lightingProgram = GL::CreateProgramEx(1, &gLightVertexShaderStr, 2, LightFragmentShaderStrs, true);
     }

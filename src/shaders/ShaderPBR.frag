@@ -1,4 +1,4 @@
-//#version 330 core
+#version 330 core
 
 // Varyings
 in vec2 vUV;
@@ -187,7 +187,7 @@ vec3 getBDRFResult(vec3 V, vec3 N, vec3 albedo, float roughness, float metallic,
         if (uLight[i].lightType == 0)
             continue;
 
-        vec3 lightPos = TBN * uLight[i].position.xyz;
+        vec3 lightPos = uLight[i].position.xyz;
         
         vec3 lightDirection = lightPos;
 
@@ -205,7 +205,7 @@ vec3 getBDRFResult(vec3 V, vec3 N, vec3 albedo, float roughness, float metallic,
         float NdotV = max(dot(N, V), 0.0);
 
         float attenuation = getLightAttenuation(uLight[i].lightType, lightDirection, 
-        TBN * uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
+        uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
 
         vec3 radiance = (lightIntensity * uLight[i].diffuse) * attenuation;        
         
@@ -237,7 +237,7 @@ vec3 getClearCoatBDRF(vec3 V, vec3 N, float clearCoatRoughness, vec3 F0)
         if (uLight[i].lightType == 0)
             continue;
 
-        vec3 lightPos = TBN * uLight[i].position.xyz;
+        vec3 lightPos = uLight[i].position.xyz;
 
         vec3 lightDirection = lightPos;
 
@@ -251,7 +251,7 @@ vec3 getClearCoatBDRF(vec3 V, vec3 N, float clearCoatRoughness, vec3 F0)
         vec3 H = normalize(V + L);
 
         float attenuation = getLightAttenuation(uLight[i].lightType, lightDirection, 
-        TBN * uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
+        uLight[i].direction, uLight[i].params.x, uLight[i].params.y);
 
         float Dc = DistributionGGX(N, H, clearCoatRoughness);        
         float Vc = V_Kelemen(clearCoatRoughness, max(dot(L,H), 0.0));      
@@ -272,9 +272,9 @@ void main()
 {
     TBN = uMaterial.hasNormalMap ? vTBN : mat3(1.0);
 
-    Pos = TBN * vPos;
+    Pos = vPos;
     vec3 N = normalize(vNormal);
-    vec3 V = normalize(TBN * uViewPosition.xyz - Pos.xyz);
+    vec3 V = normalize(uViewPosition.xyz - Pos.xyz);
 
     vec3 albedo = uMaterial.albedo * pow(texture(uMaterial.albedoMap, vUV).rgb, vec3(2.2));
     float metallic = uMaterial.metallic * texture(uMaterial.metallicMap, vUV).r;
@@ -283,7 +283,11 @@ void main()
     float specularWeight = uMaterial.specular * texture(uMaterial.specularMap, vUV).r;
 
     if (uMaterial.hasNormalMap)
-            N = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+    {
+        N = texture(uMaterial.normalMap, vUV).xyz * 2.0 - 1.0;
+        N = normalize(TBN * N);
+    }
+
 
     vec3 R = reflect(-V, N); 
     
@@ -294,12 +298,12 @@ void main()
     vec3 Lo = getBDRFResult(V, N, albedo, roughness, metallic, F0, specularWeight);
     /* --------- */
 
+    float NdotV = max(dot(N, V), 0.0);
 
     /* -- IBL Irradiance -- */
     vec3 ambient;
     if (hasIrradianceMap)
     {
-        float NdotV = max(dot(N, V), 0.0);
         vec3 specular = getIBLRadianceGGX(NdotV, R, roughness, F0, specularWeight);
         vec3 diffuse = getIBLRadianceLambertian(NdotV, N, roughness, albedo, F0, specularWeight);
         ambient = (specular + diffuse) * ao;

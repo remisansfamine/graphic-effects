@@ -9,9 +9,9 @@
 const int LIGHT_BLOCK_BINDING_POINT = 0;
 
 demo_pbr::demo_pbr(const platform_io& IO, GL::cache& GLCache, GL::debug& GLDebug)
-	: GLDebug(GLDebug)
+    : GLDebug(GLDebug)
 {
-	SetupScene(GLCache);
+    SetupScene(GLCache);
 }
 
 
@@ -36,7 +36,7 @@ void demo_pbr::SetupScene(GL::cache& GLCache)
         offsetZ = -20.f;
         marging = 3.f;
         sphereCount = 7;
-        origin = (((- marging) * (float)sphereCount) / 2.f) + marging / 2;
+        origin = (((-marging) * (float)sphereCount) / 2.f) + marging / 2;
     }
 }
 
@@ -54,9 +54,9 @@ void demo_pbr::SetupLight()
     light.lightType = 2; //PointLight
     light.diffuse = { 1,1,1 };
     light.params.e[2] = 1; //Intensity
-    light.params.e[0] = cosf(3.14f/4.f);
-    light.params.e[1] = cosf(3.14f/2.f);
-    
+    light.params.e[0] = cosf(3.14f / 4.f);
+    light.params.e[1] = cosf(3.14f / 2.f);
+
     //this->Lights[0] = this->Lights[1] = this->Lights[2] = this->Lights[3] = light;
     this->Lights[0] = light;
     this->Lights[0].position = { -10, 10 , 5, 0.f };
@@ -70,15 +70,69 @@ void demo_pbr::SetupLight()
         glBindBuffer(GL_UNIFORM_BUFFER, LightsUniformBuffer);
         glBufferData(GL_UNIFORM_BUFFER, Lights.size() * sizeof(lightPBR), Lights.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     }
 }
 
 
 void demo_pbr::SetupSphere(GL::cache& GLCache)
 {
-    // Gen cube and its program
     {
         Program = GL::CreateProgramFromFiles("src/shaders/ShaderPBR.vert", "src/shaders/ShaderPBR.frag");
+
+        {
+            // Use vbo from GLCache
+            sphere.MeshBuffer = GLCache.LoadObj("media/Gun/Gun.obj", 1.f, &sphere.MeshVertexCount);
+
+            sphere.MeshDesc.Stride = sizeof(vertex_full);
+            sphere.MeshDesc.HasNormal = true;
+            sphere.MeshDesc.HasUV = true;
+            sphere.MeshDesc.PositionOffset = OFFSETOF(vertex_full, Position);
+            sphere.MeshDesc.UVOffset = OFFSETOF(vertex_full, UV);
+            sphere.MeshDesc.NormalOffset = OFFSETOF(vertex_full, Normal);
+            sphere.MeshDesc.TangentOffset = OFFSETOF(vertex_full, Tangent);
+            sphere.MeshDesc.BitangentOffset = OFFSETOF(vertex_full, Bitangent);
+
+            glGenVertexArrays(1, &VAO);
+            glBindVertexArray(VAO);
+
+            glBindBuffer(GL_ARRAY_BUFFER, sphere.MeshBuffer);
+
+            vertex_descriptor& Desc = sphere.MeshDesc;
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.PositionOffset);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.UVOffset);
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.NormalOffset);
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.TangentOffset);
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, Desc.Stride, (void*)(size_t)Desc.BitangentOffset);
+
+        }
+    }
+
+    {
+
+        materialPBR.albedo = { 1,1,1 };
+        materialPBR.specular = 0.f;
+        materialPBR.metallic = 1.f;
+        materialPBR.roughness = 1.f;
+        materialPBR.ao = 1.f; //Ambient occlusion
+        materialPBR.hasNormal = true;
+        irradiance.hasIrradianceMap = true;
+
+        materialPBR.normalMap = GLCache.LoadTexture("media/Gun/Textures/Cerberus_N.tga", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.albedoMap = GLCache.LoadTexture("media/Gun/Textures/Cerberus_A.tga", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.metallicMap = GLCache.LoadTexture("media/Gun/Textures/Cerberus_M.tga", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.roughnessMap = GLCache.LoadTexture("media/Gun/Textures/Cerberus_R.tga", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+        materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
+    }
+    // Gen cube and its program
+    /* {
+        Program = GL::CreateProgramFromFiles("src/ShaderPBR.vert", "src/ShaderPBR.frag");
 
         {
             // Use vbo from GLCache
@@ -115,7 +169,7 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
 
     //Metalic and roughness textures
     {
-    
+
         materialPBR.albedo = { 1,1,1 };
         materialPBR.specular = 1.f;
         materialPBR.metallic = 1.f;
@@ -123,15 +177,15 @@ void demo_pbr::SetupSphere(GL::cache& GLCache)
         materialPBR.ao = 1.f; //Ambient occlusion
         materialPBR.hasNormal = true;
         irradiance.hasIrradianceMap = true;
-    
+
         materialPBR.normalMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_normal.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.albedoMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_basecolor.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.metallicMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_metallic.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.roughnessMap = GLCache.LoadTexture("media/PBR/RustedIron/rustediron2_roughness.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.aoMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
         materialPBR.specularMap = GLCache.LoadTexture("media/PBR/baseTexture.png", IMG_FLIP | IMG_GEN_MIPMAPS);
-    
-    }
+
+    }*/
 
     //No Textures
     //{
@@ -212,7 +266,6 @@ void demo_pbr::SetupCube(GL::cache& GLCache)
     glGenVertexArrays(1, &cube.VAO);
     glBindVertexArray(cube.VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(Descriptor.PositionOffset));
 
@@ -261,7 +314,7 @@ void demo_pbr::SetupSphereMap(GL::cache& GLCache)
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float* data = stbi_loadf("media/Arches_3k.hdr", &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf("media/14-Hamarikyu_Bridge_B_3k.hdr", &width, &height, &nrComponents, 0);
     if (data)
     {
         glGenTextures(1, &sphereMap.hdrTexture);
@@ -344,7 +397,7 @@ void demo_pbr::SetupPrefilterMap()
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap.prefilterMap);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
             prefilterMap.mipMapResolution, prefilterMap.mipMapResolution, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -403,7 +456,7 @@ void demo_pbr::SetupPBR()
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  1.0f,  0.0f}, v3{0.0f,  0.0f,  1.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f, -1.0f,  0.0f}, v3{0.0f,  0.0f, -1.0f}),
        Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f,  1.0f}, v3{0.0f, -1.0f,  0.0f}),
-       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f}),
+       Mat4::LookAt({0.0f, 0.0f, 0.0f}, {0.0f,  0.0f, -1.0f}, v3{0.0f, -1.0f,  0.0f})
     };
 
     //Setup spheremap
@@ -535,9 +588,6 @@ void demo_pbr::Update(const platform_io& IO)
 
     Camera = CameraUpdateFreefly(Camera, IO.CameraInputs);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-
     // Clear screen
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -569,12 +619,10 @@ void demo_pbr::Update(const platform_io& IO)
         RenderSphere(ProjectionMatrix, ViewMatrix, ModelMatrix);
     }
 
-    glCullFace(GL_FRONT);
-
-
     //Render Skybox
     {
         glDepthFunc(GL_LEQUAL);
+        glCullFace(GL_FRONT);
         // convert HDR equirectangular environment map to cubemap equivalent
         glUseProgram(skybox.Program);
         glUniformMatrix4fv(glGetUniformLocation(sphereMap.Program, "uProjection"), 1, GL_FALSE, ProjectionMatrix.e);
@@ -588,10 +636,8 @@ void demo_pbr::Update(const platform_io& IO)
 
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glCullFace(GL_BACK);
     }
-
-    glCullFace(GL_BACK);
-
     // Display debug UI
     this->DisplayDebugUI();
 }
@@ -604,9 +650,10 @@ void demo_pbr::RenderSphere(const mat4& ProjectionMatrix, const mat4& ViewMatrix
     glUseProgram(Program);
 
     // Set uniforms
-    mat4 NormalMatrix = Mat4::Transpose(Mat4::Inverse(ModelMatrix));
+    mat4 newModel = ModelMatrix * Mat4::Scale({ 4.f, 4.f, 4.f });
+    mat4 NormalMatrix = Mat4::Transpose(Mat4::Inverse(newModel));
     glUniformMatrix4fv(glGetUniformLocation(Program, "uProjection"), 1, GL_FALSE, ProjectionMatrix.e);
-    glUniformMatrix4fv(glGetUniformLocation(Program, "uModel"), 1, GL_FALSE, ModelMatrix.e);
+    glUniformMatrix4fv(glGetUniformLocation(Program, "uModel"), 1, GL_FALSE, newModel.e);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uView"), 1, GL_FALSE, ViewMatrix.e);
     glUniformMatrix4fv(glGetUniformLocation(Program, "uModelNormalMatrix"), 1, GL_FALSE, NormalMatrix.e);
     glUniform3fv(glGetUniformLocation(Program, "uViewPosition"), 1, Camera.Position.e);
@@ -696,7 +743,7 @@ void demo_pbr::DisplayDebugUI()
             ImGui::Text("Yaw: %.2f", Math::ToDegrees(Camera.Yaw));
             ImGui::TreePop();
         }
-        
+
         if (ImGui::TreeNodeEx("Lights"))
         {
             for (int i = 0; i < Lights.size(); ++i)
@@ -746,7 +793,7 @@ void demo_pbr::DisplayDebugUI()
                 }
 
                 ImGui::InputFloat("OffsetZ", &offsetZ);
-                
+
                 if (ImGui::InputFloat("marging", &marging))
                     origin = (((-marging) * (float)sphereCount) / 2.f) + marging / 2;
             }
@@ -757,4 +804,3 @@ void demo_pbr::DisplayDebugUI()
         ImGui::TreePop();
     }
 }
-
