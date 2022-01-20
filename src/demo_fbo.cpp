@@ -354,6 +354,21 @@ void demo_fbo::DisplayDebugUI()
 
 void demo_fbo::Update(const platform_io& IO)
 {
+    if (IO.WindowSizeChanged)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, Framebuffer.FBO);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, Framebuffer.DepthStencilRenderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, IO.WindowWidth, IO.WindowHeight);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        glBindTexture(GL_TEXTURE_2D, Framebuffer.ColorTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IO.WindowWidth, IO.WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     // First rendering pass
     glBindFramebuffer(GL_FRAMEBUFFER, Framebuffer.FBO);
     glEnable(GL_DEPTH_TEST);

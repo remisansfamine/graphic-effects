@@ -197,6 +197,21 @@ void demo_npr::RenderOutline(const mat4& ModelViewProj)
 
 void demo_npr::Update(const platform_io& IO)
 {
+    if (IO.WindowSizeChanged)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, OutlineFBO);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, RenderBuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, IO.WindowWidth, IO.WindowHeight);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        glBindTexture(GL_TEXTURE_2D, OutlineTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IO.WindowWidth, IO.WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     glViewport(0, 0, IO.WindowWidth, IO.WindowHeight);
 
     Camera = CameraUpdateFreefly(Camera, IO.CameraInputs);
