@@ -1,153 +1,92 @@
+# Graphic effects - PBR - OpenGL/C++
+### ISART DIGITAL : School Project - GP2 - MARIN Benjamin - LEGRAND Sasha - GINER Rémi
 
-# Liste d'effets à base d'images
+---
 
-## Type : Simuler des volumes 3D
-- [Skybox](cards/skybox.md)
-- Billboards (screen-aligned ou world-oriented)
-- Impostors (objet 3D rendu sur une texture (souvent sous plusieurs angles de rotation))
+<!-- ABOUT THE PROJECT -->
+# About The Project
+The goal of the project is to learn different rendering technics using IBR Engine. Our group was focused on implementing Physically Based Rendering.
 
-## Type : Post process
-- Prérequis : [Rendu offscreen](cards/postprocess.md)
-- [Color correction/Color grading](cards/color_grading.md)
-- Tone mapping
-- Blur (Gaussian and downsampling)
-- Bloom
-- Lens flare
-- Depth of field
-- Motion blur (Velocity buffer, éviter l'utilisation de l'accumulation buffer)
-- Fog
+## Built with
+Visual Studio 2019
 
-## Types : Autres
-- Textures animées ([voir les utilisations possible dans Mario Galaxy](https://www.youtube.com/watch?v=8rCRsOLiO7k))
+<!-- GETTING STARTED -->
 
-# Travaux pratiques
+## Installation
+Compile with Visual Studio 2019 in C++ 17
 
-## Le but
+## How to launch
+Launch with Visual Studio
 
-Ce module vous donne l'occasion de manipuler des fonctionalités essentielles du [pipeline 3D](https://en.wikipedia.org/wiki/Graphics_pipeline). L'implémentation de chacun de ces effets vous donnera de la matière qui vous sera ensuite utile pour le projet de fin d'année de moteur de jeu.
+---
 
-## Notation
+# Features & Usage
 
-Avec une durée d'environ 7 jours, il est possible que vous n'ayez pas le temps de tous les faire. Vous devez cependant fournir une liste d'effets **____**qui justifie cette semaine de travail**____**.
+## Controls
+The controls are made for QWERTY so, switch your keyboard in QWERTY
+The player controls are:
+- W - Forward
+- S - Backward
+- A - Left
+- D - Right   
+- Space - Upward
+- Ctrl - Downward
+- Left click - Rotate camera
+- Right click - Lock camera
+- ESCAPE - Unlock camera
 
-## Estimation des durées d'implémentation des effets
-(Sujettes à variation selon les implémentations et le degré d'approfondissement)
+## Features
 
-| Rapides            | Modérées          | Longues                           |
-|--------------------|-------------------|-----------------------------------|
-| Skybox             | Blur              | Impostors (si générés au runtime) |
-| Billboards         | Bloom             | Motion blur                       |
-| Color correction   | Fog               | Depth of field                    |
-|                    | Lens flare        |                                   |
+<div style="text-align:center">
 
-Sont pris en compte dans la notation :
-- Le code de vos démo doit suivre la norme du projet et être concis/minimal. (par exemple : pénalité si du code inutile traine car vous vous êtes basé sur du code existant).
-- Pas de memory (ram/vram) leaks.
-- Les démos doivent avoir un rendu visuel peaufiné. (Évitez les cubes qui flottent dans les abysses).
-- Le nom des variables doit être clair (dans leur contexte).
+![FBO](screenshots/PBR_Scene.png)
 
-# Notes et directives
+*Physically Based Rendering*
 
-La structure du projet doit être conservée car il y aura certainement des évolutions au fur et à mesure.
+![FBO](screenshots/NPR_Scene.png)
 
-La norme de code, différente de d'habitude et spécifique à ce projet doit être conservée. Vous devez vous fondre dans une nouvelle base de code.
+*Non Photorealistic Rendering*
 
-Le code utilise principalement le paradigme procédural, les abstractions sont limitées au maximum afin de toujours être au plus bas niveau de l'interface OpenGL. 
+![FBO](screenshots/FBO_Scene.png)
 
-Chaque effet doit être implémenté dans un fichier `demo_xxx.cpp` avec l'entête équivalent.
+*Post-processing*
 
-Les seules choses à modifier dans le `main.cpp` sont les endroits marqués par `TODO(demo)`.
+![DS](screenshots/HDR_Scene.png)
 
-```c++
-#include "demo_base.h"
-// TODO(demo): Add headers here
-#include "demo_xxx.h"
-```
-et
-```c++
-std::unique_ptr<demo> Demos[] = 
-{
-    std::make_unique<demo_base>(),
-    // TODO(demo): Add other demos here
-    std::make_unique<demo_xxx>(),
-};
-```
+*Bloom and HDR*
 
-Le fichier `maths.h` est volontairement limité, il va potentiellement être mis à jour au cours du projet. Ajoutez les fonctions dont vous avez besoin dans `maths_extension.h` (inclus dans maths.h) pour éviter d'éventuels conflits.
+![DS](screenshots/NM_Scene.png)
 
-# Description des fichiers
+*Normal Mapping*
 
-[```demo.h```](src/demo.h) :
-- Interface à implémenter pour chacun des effets.
+![DS](screenshots/DS_Scene.png)
 
-[```main.cpp```](src/main.cpp) : 
-- S'occupe de la création de la fenêtre et du contexte OpenGL.
-- Instancie toutes les démos.
-- Contient la boucle principale, qui récupère les inputs et communique avec les démos grâce à ```platform_io```.
-- (C'est le seul fichier à réécrire  si on voulait porter le projet sous une autre plateforme non gérée par GLFW)
+*Deferred Shading*
 
-[```platform.h```](src/platform.h) :
-- Contient ```platform_io``` qui sert à communiquer les informations de la plateforme (dimensions d'écran, mouvement de la souris) avec les démos.
+![DS](screenshots/Shadow_Scene.png)
 
-[```demo_minimal.cpp```](src/demo_minimal.cpp) :
-- Exemple minimal.
+*Shadow Mapping*
 
-[```demo_postprocess.cpp```](src/demo_minimal.cpp) :
-- Exemple de rendu hors screen (1ère passe) afin de modifier les couleurs lors d'une 2ème passe.
+![DS](screenshots/Skybox_Scene.png)
 
-[```types.h```](src/types.h) :
-- Types primitifs vecteurs/matrices : ```v2```, ```v3```, ```v4``` et ```mat4```.
+*Skybox*
 
-[```maths.h```](src/maths.h) :
-- Fonctions mathématiques et surcharges d'opérateurs pour les types ```v2```, ```v3```, ```v4``` et ```mat4```.
-- Utilisez le fichier ```maths_extension.h``` si vous avez besoin d'ajouter vos propres fonctions afin d'éviter les conflits en cas de modifications.
+![DS](screenshots/InstancingGIF.gif)
 
-[```camera.h```](src/camera.h) :
-- Gestion des déplacement de la caméra (mode FPS ou libre)
+*Instancing*
 
-[```mesh.h```](src/mesh.h) :
-- Outil de construction de mesh.
-- Permet de charger les types primitifs (quad, cube, sphere) et les models obj dans vos propres format de vertex.
+![DS](screenshots/PickingGIF.gif)
 
+*Picking*
+<div style="text-align:left">
 
-``` c++
-// Create vertex format descriptor
-vertex_descriptor Descriptor = {};
-Descriptor.Stride = sizeof(vertex);
-Descriptor.PositionOffset = offsetof(vertex, Position);
+# Details
+## Versionning
+We used Git Lab for the versioning.
 
-// Create a cube in RAM
-vertex Cube[36];
-this->VertexCount = 36;
-Mesh::BuildCube(Cube, Cube + this->VertexCount, Descriptor);
-```
+## Authors
+**MARIN Benjamin**
 
-```opengl_headers.h``` : Entêtes OpenGL.
+**LEGRAND Sasha**
 
-```opengl_helpers.h``` : Divers outils pour OpenGL
-- ```class GL::debug``` : Affichage wireframe d'un vbo.
-- ```class GL::cache``` : Permet d'accélérer les chargements des .obj et textures.
-- fonction ```GL::CreateProgram()``` : Compilation du shader avec options d'injecter une fonction de shading de type phong.
-- fonction ```GLImGui::InspectProgram``` : Permet d'inspecter un shader et notamment de modifier les sources et les uniforms à la volée.
-
-```color.h``` :
-- Fonctions de conversion de code couleur en ```v3```/```v4```.
-
-## Liens utiles
-- Specs OpenGL 3.3 Core : https://www.khronos.org/registry/OpenGL/specs/gl/glspec33.core.pdf
-- Livre référence + Liste de ressources liées au rendu : https://www.realtimerendering.com/
-- Documentation OpenGL : http://docs.gl/
-- Analyse de frames de divers jeux : http://www.adriancourreges.com/projects/
-- Exploration WebGL de jeux Nintendo : https://noclip.website/ et analyse des techniques utilisées https://www.youtube.com/watch?v=8rCRsOLiO7k
-- Uncharted 2: HDR Lighting : https://www.gdcvault.com/play/1012351/Uncharted-2-HDR
-- RenderDoc, outil d'analyse de frames (utile pour debugger sa propre application) : https://renderdoc.org/
-- GLIntercept, permet entre autre de mettre en évidence les memory leaks : https://github.com/dtrebilco/glintercept 
-
-## Assets
-- 3d model *Fantasy Game Inn* by [**pepedrago**](https://sketchfab.com/pepedrago): https://sketchfab.com/3d-models/fantasy-game-inn-192bf30a7e28425ab385aef19769d4b0
-- *Generic Night Skybox* by **JasperCarmack**: https://gamebanana.com/textures/download/5345
-
-## Bibliothèques externes
-- [```nothings/stb```]() pour le chargement des images.
-- [```ocornut/imgui```](https://github.com/ocornut/imgui) pour l'affichage de l'UI.
-- [```syoyo/tiny_obj_loader```](https://github.com/syoyo/tinyobjloader) pour le chargement des models .obj.
+**GINER Rémi**
